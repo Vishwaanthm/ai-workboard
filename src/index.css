@@ -1,0 +1,346 @@
+@import 'tailwindcss';
+
+/* Every value below comes from DESIGN.md. Components use these tokens only. */
+@theme {
+  /* "Ink and Volt": paper reading surfaces, ink cinematic surfaces, one volt-lime signal. */
+  --color-background: #f5f5f0;
+  --color-foreground: #0d1222;
+  --color-card: #ffffff;
+  --color-muted: #eaebe4;
+  --color-muted-foreground: #4a5163;
+  --color-primary: #0d1222;
+  --color-primary-foreground: #ffffff;
+  --color-primary-hover: #2a3150;
+  --color-primary-soft: #ecf7cc;
+  --color-progress: #4d7c0f;
+  --color-accent: #d97706;
+  --color-accent-foreground: #b45309;
+  --color-accent-soft: #fef3c7;
+  --color-accent-soft-foreground: #92400e;
+  --color-destructive: #dc2626;
+  --color-destructive-soft: #fef2f2;
+  --color-destructive-soft-foreground: #b91c1c;
+  --color-border: #d9dacf;
+  --color-input: #6b7080;
+  --color-ring: #0d1222;
+  --color-ink: #0b0f1c;
+  --color-ink-raised: #151b2e;
+  --color-ink-line: #2a3350;
+  --color-on-ink: #f5f5f0;
+  --color-on-ink-muted: #b4bbcf;
+  --color-volt: #c5f04a;
+  --color-volt-hover: #d8f985;
+  --color-theme-ocean: #38bdf8;
+  --color-theme-midnight: #a5b4fc;
+  --color-theme-sunrise: #fb923c;
+  --color-theme-slate: #cbd5e1;
+  --color-theme-forest: #4ade80;
+  --color-theme-aurora: #5eead4;
+  --color-code: #0f172a;
+  --color-code-foreground: #f8fafc;
+  --color-code-muted: #94a3b8;
+  --color-code-accent: #22c55e;
+  --color-code-highlight: #5eead4;
+
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Instrument Sans Variable', ui-sans-serif, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --radius-control: 6px;
+  --radius-checkbox: 4px;
+  --radius-panel: 10px;
+
+  --shadow-raised: 0 1px 2px rgb(13 18 34 / 0.06), 0 6px 16px rgb(13 18 34 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(13 18 34 / 0.08), 0 18px 40px -12px rgb(13 18 34 / 0.35);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-exit: 150ms;
+  --duration-slow: 320ms;
+  --duration-reveal: 520ms;
+  --duration-draw: 900ms;
+  --duration-ring: 700ms;
+  --duration-flow: 2800ms;
+  --stagger: 70ms;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-sheet-in: sheet-in var(--duration-base) var(--ease-out);
+  --animate-sheet-out: sheet-out var(--duration-exit) var(--ease-out);
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-out);
+  --animate-fade-out: fade-out var(--duration-exit) var(--ease-out);
+  --animate-rise-in: rise-in var(--duration-slow) var(--ease-out);
+
+  @keyframes sheet-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes sheet-out {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  h1,
+  h2 {
+    @apply font-display;
+    font-weight: 700;
+  }
+  h1 {
+    letter-spacing: -0.03em;
+  }
+  h2 {
+    letter-spacing: -0.02em;
+  }
+  /* Ink sections (hero, page bands): light text and a volt focus ring. */
+  .on-ink {
+    color: var(--color-on-ink);
+    --color-ring: var(--color-volt);
+  }
+  h3 {
+    font-weight: 600;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-primary-soft);
+    color: var(--color-foreground);
+  }
+}
+
+/* ---- Phase 2 motion (DESIGN.md "Motion"): transform/opacity/filter/stroke-dashoffset only ---- */
+
+/* Scroll reveal: once, opacity + 12px rise + 4px blur, 70 ms stagger (capped in Reveal.tsx). */
+.reveal {
+  transition:
+    opacity var(--duration-reveal) var(--ease-out),
+    transform var(--duration-reveal) var(--ease-out),
+    filter var(--duration-reveal) var(--ease-out);
+  transition-delay: calc(var(--stagger-i, 0) * var(--stagger));
+}
+.reveal[data-revealed='false'] {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(4px);
+}
+
+/* Hero hub diagram: draw-in once, then a slow request flow that can be paused. */
+.hub-art--animate .hub-link {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: hub-draw var(--duration-draw) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+.hub-art--animate .hub-node {
+  opacity: 0;
+  transform: translateY(6px);
+  transform-box: fill-box;
+  animation: hub-node-in var(--duration-reveal) var(--ease-out) forwards;
+  animation-delay: calc(300ms + var(--i, 0) * var(--stagger));
+}
+.hub-art--animate .hub-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hub-core-in var(--duration-reveal) var(--ease-out) both;
+}
+.hub-flow-dot {
+  stroke-dasharray: 3 97;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  animation:
+    hub-flow var(--duration-flow) linear infinite,
+    hub-flow-fade 400ms var(--ease-out) forwards;
+  animation-delay:
+    calc(1100ms + var(--i, 0) * -311ms),
+    1100ms;
+}
+.hub-art--paused .hub-flow-dot {
+  animation-play-state: paused;
+}
+@keyframes hub-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes hub-node-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hub-core-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes hub-flow {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes hub-flow-fade {
+  to {
+    opacity: 0.9;
+  }
+}
+
+/* Backdrops: a static masked grid; topo contours draw in once when revealed. */
+.backdrop-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-primary) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 9%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 30%, transparent 75%);
+}
+.backdrop-topo--draw path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.backdrop-topo--draw.is-revealed path {
+  transition: stroke-dashoffset var(--duration-draw) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * var(--stagger));
+  stroke-dashoffset: 0;
+}
+
+/* Progress ring fill and the lab step badge pop. */
+.ring-fill--animate {
+  transition: stroke-dashoffset var(--duration-ring) var(--ease-in-out);
+}
+.step-badge--pop {
+  animation: step-pop 180ms var(--ease-out) both;
+}
+@keyframes step-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: var(--color-card);
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only-area {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  [data-sonner-toaster],
+  a[href='#main'] {
+    display: none !important;
+  }
+}
+
+/* ---- Redesign: cinematic surfaces (DESIGN.md "Imagery and motion") ---- */
+.hero-scrim {
+  background: linear-gradient(90deg, rgb(11 15 28 / 0.94) 0%, rgb(11 15 28 / 0.8) 48%, rgb(11 15 28 / 0.4) 100%);
+}
+@media (max-width: 767px) {
+  .hero-scrim {
+    background: linear-gradient(0deg, rgb(11 15 28 / 0.96) 0%, rgb(11 15 28 / 0.84) 60%, rgb(11 15 28 / 0.6) 100%);
+  }
+}
+.part-scrim {
+  background: linear-gradient(180deg, rgb(11 15 28 / 0.5) 0%, rgb(11 15 28 / 0.86) 50%, rgb(11 15 28 / 0.96) 100%);
+}
+.part-cover {
+  transition: transform 700ms var(--ease-out);
+}
+.group:hover .part-cover {
+  transform: scale(1.05);
+}
+.hero-rise > * {
+  animation: rise-in 700ms var(--ease-out) both;
+}
+.hero-rise > :nth-child(2) {
+  animation-delay: 80ms;
+}
+.hero-rise > :nth-child(3) {
+  animation-delay: 160ms;
+}
+.hero-rise > :nth-child(4) {
+  animation-delay: 240ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .part-cover {
+    transform: none;
+  }
+}

@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+*.log
+.vite
+
+# Kept local only (not published)
+docs/
+PLAN.md
+PLAN-PHASE2.md
+PLAN-REVIEW-LOG.md
