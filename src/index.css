@@ -383,3 +383,69 @@
     transform: none;
   }
 }
+
+/* ---- Strands-style sections (DESIGN.md "Home sections") ---- */
+
+/* Header mega-menu: drops from its trigger, 160 ms fade plus a 4px rise. */
+.menu-panel {
+  transform-origin: top center;
+  animation: menu-in 160ms var(--ease-out) both;
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Use-case cards on ink: lift 2px on hover (no lift under reduced motion). */
+.usecase-card {
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+.usecase-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Explore by part: the newly selected panel rises in once. */
+.tab-panel-in {
+  animation: rise-in var(--duration-base) var(--ease-out) both;
+}
+
+/* Model provider strip: two identical tracks slide left forever (linear, 40 s). Paused while hovered or
+   focused; not rendered at all under reduced motion or with the footer switch off (static wrap instead). */
+.marquee-mask {
+  mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+}
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track,
+.marquee:focus .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Backstop: the component already renders the static list; never jump to the loop's end frame. */
+  .marquee-track,
+  .menu-panel,
+  .tab-panel-in {
+    animation: none !important;
+  }
+  .usecase-card:hover {
+    transform: none;
+  }
+}

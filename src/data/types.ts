@@ -200,3 +200,80 @@ export interface CourseData {
   labs: Lab[]
   quizzes: Quiz[]
 }
+
+/* ---- Home page sections (src/data/home.ts) ---- */
+
+/**
+ * A link in home data: a site path such as "/course" (in-app) or an absolute http(s):// URL (new tab).
+ * Any other value is shown as plain text, not as a link.
+ */
+export interface HomeLink {
+  label: string
+  href: string
+}
+
+/** Site-wide bar above the header. Change `id` to show a new announcement to people who dismissed the last one. */
+export interface Announcement {
+  id: string
+  text: string
+  link?: HomeLink
+}
+
+/** The code or console panel shown in a part's "Explore by part" tab. */
+export interface PartSnippet {
+  /** Must match a Part id. */
+  partId: number
+  /** File name or caption above the code; also the copy button's accessible name. */
+  label: string
+  lang: CodeLang
+  code: string
+}
+
+/** One "What you'll build" card. */
+export interface UseCase {
+  id: string
+  /** Must match a Part id: sets the card's accent and its "Part N" label. */
+  partId: number
+  title: string
+  text: string
+  /** Optional official AWS icon shown with its service name. */
+  service?: AwsIconName
+  /** Card link; defaults to the part on the Course page. */
+  href?: string
+}
+
+/** A "What's new" card in the learning hub. Without `href` the card is not a link. */
+export interface HubPost {
+  id: string
+  /** Short label such as "Article" or "Video". */
+  kind: string
+  title: string
+  text: string
+  /** ISO date (YYYY-MM-DD); shown as "TBA" when missing. */
+  date?: string
+  href?: string
+}
+
+/** An event in the learning hub. */
+export interface HubEvent {
+  id: string
+  title: string
+  /** ISO date (YYYY-MM-DD); shown as "TBA" when missing. */
+  date?: string
+  location: string
+  href?: string
+}
+
+export interface HomeSections {
+  /** null hides the bar. */
+  announcement: Announcement | null
+  /** One-line descriptions under the header Learn menu links (routes are fixed in the header). */
+  learnMenu: { labs: string; dashboard: string; certificate: string }
+  explore: { lede: string; snippets: PartSnippet[] }
+  /** Provider names shown as text chips (no logos). */
+  models: { lede: string; providers: string[] }
+  useCases: { lede: string; items: UseCase[] }
+  hub: { lede: string; cta: HomeLink; posts: HubPost[]; events: HubEvent[] }
+  /** Copyable command in the closing call to action; null hides it. */
+  closingCommand: { label: string; code: string } | null
+}

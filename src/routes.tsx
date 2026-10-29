@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { isRouteErrorResponse, Link, Outlet, ScrollRestoration, useRouteError, type RouteObject } from 'react-router'
 import { Toaster } from 'sonner'
+import { AnnouncementBar } from './components/AnnouncementBar'
 import { Container, GuestOnly, NotFound, PageSkeleton, RequireAuth, StorageWarning } from './components/misc'
 import { PageHeading } from './components/PageHeading'
 import { SiteFooter } from './components/SiteFooter'
@@ -27,6 +28,7 @@ function Layout({ withScrollRestoration = true }: { withScrollRestoration?: bool
       >
         Skip to content
       </a>
+      <AnnouncementBar />
       <SiteHeader />
       <StorageWarning />
       <main id="main" tabIndex={-1} className="flex-1 outline-none">

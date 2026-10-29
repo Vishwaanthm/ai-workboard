@@ -2,6 +2,7 @@ import { course, episodes, parts, IS_PLACEHOLDER as coursePlaceholder } from './
 import { labs, IS_PLACEHOLDER as labsPlaceholder } from './labs'
 import { quizzes, IS_PLACEHOLDER as quizzesPlaceholder } from './quizzes'
 import { IS_PLACEHOLDER as sitePlaceholder } from './site'
+import { IS_PLACEHOLDER as homePlaceholder } from './home'
 import type { CourseData, Lab, Episode, Part, Quiz } from './types'
 
 export type { CourseData } from './types'
@@ -15,6 +16,7 @@ const placeholderFlags: [boolean, string][] = [
   [labsPlaceholder, 'src/data/labs.ts'],
   [quizzesPlaceholder, 'src/data/quizzes.ts'],
   [sitePlaceholder, 'src/data/site.ts'],
+  [homePlaceholder, 'src/data/home.ts'],
 ]
 export const placeholderFiles: string[] = placeholderFlags.filter(([flag]) => flag).map(([, file]) => file)
 

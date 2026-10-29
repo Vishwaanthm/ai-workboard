@@ -1,9 +1,10 @@
 import { LogOut, Menu } from 'lucide-react'
 import { useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { useAppState } from '@/context/useAppState'
 import { cn } from '@/lib/utils'
 import { BrandMark } from './BrandMark'
+import { DesktopNavMenu, navMenuGroups, SheetNavGroup } from './nav/NavMenu'
 import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
 
@@ -22,13 +23,19 @@ const sheetLinkClass = ({ isActive }: { isActive: boolean }) =>
   )
 
 export function SiteHeader() {
-  const { user, logout } = useAppState()
+  const { user, logout, data } = useAppState()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  /** Which desktop mega-menu is open (one at a time). */
+  const [openGroup, setOpenGroup] = useState<string | null>(null)
+  /** Which group is expanded inside the mobile sheet. */
+  const [sheetGroup, setSheetGroup] = useState<string | null>(null)
   const close = () => setMenuOpen(false)
+  const groups = navMenuGroups(data)
 
+  // "Course" is now a menu (its first item is the Course page); the other existing links stay as links.
   const links = [
-    { to: '/course', label: 'Course' },
     { to: '/labs', label: 'Labs' },
     ...(user ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
   ]
@@ -41,10 +48,19 @@ export function SiteHeader() {
 
   return (
     <header className="no-print on-ink sticky top-0 z-30 border-b border-ink-line bg-ink/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <BrandMark onInk />
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+          {groups.map((g) => (
+            <DesktopNavMenu
+              key={g.id}
+              group={g}
+              pathname={pathname}
+              open={openGroup === g.id}
+              onOpenChange={(o) => setOpenGroup(o ? g.id : null)}
+            />
+          ))}
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} className={navLinkClass}>
               {l.label}
@@ -55,7 +71,7 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <>
-              <span className="max-w-40 truncate text-sm text-on-ink-muted" title={user.name}>
+              <span className="hidden max-w-40 truncate text-sm text-on-ink-muted lg:inline" title={user.name}>
                 {user.name}
               </span>
               <Button variant="onInk" onClick={handleLogout}>
@@ -83,6 +99,15 @@ export function SiteHeader() {
           </SheetTrigger>
           <SheetContent title="Menu" description="Site navigation and account links">
             <nav aria-label="Main" className="flex flex-col gap-1">
+              {groups.map((g) => (
+                <SheetNavGroup
+                  key={g.id}
+                  group={g}
+                  open={sheetGroup === g.id}
+                  onOpenChange={(o) => setSheetGroup(o ? g.id : null)}
+                  onNavigate={close}
+                />
+              ))}
               {links.map((l) => (
                 <NavLink key={l.to} to={l.to} className={sheetLinkClass} onClick={close}>
                   {l.label}

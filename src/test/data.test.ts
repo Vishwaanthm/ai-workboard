@@ -3,7 +3,7 @@ import { courseCounts, courseData, placeholderFiles } from '@/data'
 import { validateCourseData } from '@/data/validate'
 import { cloneData } from './helpers'
 
-const dataFiles = import.meta.glob('/src/data/{course,labs,quizzes,site}.ts', {
+const dataFiles = import.meta.glob('/src/data/{course,labs,quizzes,site,home}.ts', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -15,13 +15,13 @@ describe('course data', () => {
   })
 
   it('marks every data file as placeholder content', () => {
-    expect(Object.keys(dataFiles)).toHaveLength(4)
+    expect(Object.keys(dataFiles)).toHaveLength(5)
     for (const [path, raw] of Object.entries(dataFiles)) {
       const text = raw.replace(/\r\n/g, '\n')
       expect(text.trimStart().startsWith('/*\n * TODO(content)'), path).toBe(true)
       expect(text, path).toContain('export const IS_PLACEHOLDER = true')
     }
-    expect(placeholderFiles).toHaveLength(4)
+    expect(placeholderFiles).toHaveLength(5)
   })
 
   it('covers every state the pages need', () => {

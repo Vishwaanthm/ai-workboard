@@ -3,6 +3,11 @@ import { useRef } from 'react'
 import { Link } from 'react-router'
 import { HubArt } from '@/components/art/HubArt'
 import { LabServiceIcons } from '@/components/art/LabServiceIcons'
+import { CopyCommand } from '@/components/home/CopyCommand'
+import { ExploreByPart } from '@/components/home/ExploreByPart'
+import { LearningHub } from '@/components/home/LearningHub'
+import { ModelStrip } from '@/components/home/ModelStrip'
+import { UseCases } from '@/components/home/UseCases'
 import { BackgroundVideo } from '@/components/media/BackgroundVideo'
 import { HeroNetwork } from '@/components/media/HeroNetwork'
 import { HERO_MEDIA, PART_COVERS } from '@/components/media/partCovers'
@@ -12,6 +17,7 @@ import { PageHeading } from '@/components/PageHeading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { courseCounts, episodesInPart } from '@/data'
+import { home } from '@/data/home'
 import { site } from '@/data/site'
 import { useAppState } from '@/context/useAppState'
 import { nextStep, nextStepHref } from '@/lib/progress'
@@ -150,6 +156,52 @@ export default function HomePage() {
         </Container>
       </section>
 
+      {home.models.providers.length > 0 ? (
+        <section aria-labelledby="models-heading" className="on-ink border-t border-ink-line bg-ink py-12 md:py-16">
+          <Container>
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between md:gap-8">
+              <h2 id="models-heading" className="text-[22px] md:text-[28px]">
+                Models on Amazon Bedrock
+              </h2>
+              <p className="max-w-[52ch] text-on-ink-muted">{home.models.lede}</p>
+            </div>
+            <div className="mt-8">
+              <ModelStrip providers={home.models.providers} />
+            </div>
+          </Container>
+        </section>
+      ) : null}
+
+      <section aria-labelledby="explore-heading" className="py-16 md:py-24">
+        <Container>
+          <Reveal className="grid gap-4 md:grid-cols-[1fr_1.2fr] md:items-end">
+            <h2 id="explore-heading" className="text-[34px] leading-[1.02] md:text-[52px]">
+              Explore by part
+            </h2>
+            <p className="max-w-[56ch] text-lg text-muted-foreground">{home.explore.lede}</p>
+          </Reveal>
+          <div className="mt-10">
+            <ExploreByPart data={data} snippets={home.explore.snippets} />
+          </div>
+        </Container>
+      </section>
+
+      {home.useCases.items.length > 0 ? (
+        <section aria-labelledby="build-heading" className="on-ink bg-ink py-16 md:py-24">
+          <Container>
+            <Reveal className="grid gap-4 md:grid-cols-[1fr_1.2fr] md:items-end">
+              <h2 id="build-heading" className="text-[34px] leading-[1.02] md:text-[52px]">
+                What you'll build
+              </h2>
+              <p className="max-w-[56ch] text-lg text-on-ink-muted">{home.useCases.lede}</p>
+            </Reveal>
+            <div className="mt-12">
+              <UseCases data={data} items={home.useCases.items} />
+            </div>
+          </Container>
+        </section>
+      ) : null}
+
       {featuredLabs.length > 0 ? (
         <section aria-labelledby="labs-heading" className="border-t border-border bg-card py-16 md:py-24">
           <Container className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
@@ -202,6 +254,12 @@ export default function HomePage() {
         </Container>
       </section>
 
+      <section aria-labelledby="learning-hub-heading" className="border-t border-border py-16 md:py-24">
+        <Container>
+          <LearningHub hub={home.hub} headingId="learning-hub-heading" />
+        </Container>
+      </section>
+
       <section aria-labelledby="instructor-heading" className="border-t border-border bg-card py-16 md:py-20">
         <Container className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <span
@@ -231,6 +289,11 @@ export default function HomePage() {
             <p className="mt-2 max-w-[52ch] text-lg">
               {plural(counts.episodes, 'episode')}, {plural(counts.labs, 'lab')} and a certificate at the end.
             </p>
+            {home.closingCommand ? (
+              <div className="mt-6">
+                <CopyCommand label={home.closingCommand.label} code={home.closingCommand.code} />
+              </div>
+            ) : null}
           </div>
           <Button size="lg" asChild>
             <Link to={startHref}>

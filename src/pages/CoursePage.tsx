@@ -1,5 +1,5 @@
 import { CheckCircle2, CircleDashed, FlaskConical } from 'lucide-react'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ProgressRing } from '@/components/art/ProgressRing'
 import { COURSE_COVER, coverFor } from '@/components/media/partCovers'
@@ -107,6 +107,13 @@ export default function CoursePage() {
   const counts = courseCounts(data)
   const hashPart = /^#part-(\d+)$/.exec(hash)?.[1]
   const openParts = hashPart ? [`part-${hashPart}`] : data.parts[0] ? [`part-${data.parts[0].id}`] : []
+  // Controlled so a #part-N link followed while already on this page (header Course menu) opens that part.
+  const [openItems, setOpenItems] = useState<string[]>(openParts)
+  const [seenHash, setSeenHash] = useState(hash)
+  if (hash !== seenHash) {
+    setSeenHash(hash)
+    if (hashPart && !openItems.includes(`part-${hashPart}`)) setOpenItems([...openItems, `part-${hashPart}`])
+  }
 
   const meta = [
     data.course.level,
@@ -187,7 +194,7 @@ export default function CoursePage() {
               <h2 id="curriculum-heading" className="text-[30px] leading-[1.05] md:text-[40px]">
                 Curriculum
               </h2>
-              <Accordion type="multiple" defaultValue={openParts} className="mt-6 flex flex-col gap-4">
+              <Accordion type="multiple" value={openItems} onValueChange={setOpenItems} className="mt-6 flex flex-col gap-4">
                 {data.parts.map((part) => {
                   const eps = episodesInPart(data, part.id)
                   const total = partDuration(data, part.id)

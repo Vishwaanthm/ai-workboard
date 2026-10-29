@@ -163,10 +163,30 @@ Layers, back to front: background video (`hero-layer-bg`), hero scrim, pointer n
 | `--duration-ring` | 700ms | Progress ring fill |
 | hero rise | 700ms, 80ms stagger | Hero copy entrance |
 
-Looping motion: only the hero background video and the hero network, both stopped by the footer
-"Background video" switch (WCAG 2.2.2) and both absent under `prefers-reduced-motion` (the switch is
-then hidden because nothing moves). Only `transform`, `opacity`, `filter`, `stroke-dashoffset` and the
+Looping motion: only the hero background video, the hero network and the Home model provider strip,
+all stopped by the footer "Background video" switch (WCAG 2.2.2) and all absent under
+`prefers-reduced-motion` (the switch is then hidden because nothing moves). Only `transform`, `opacity`, `filter`, `stroke-dashoffset` and the
 canvas animate. The global reduced-motion rule sets every CSS duration to 0.01ms as a backstop.
+
+## Home sections (Strands-style patterns, 2026-10-29)
+
+Section patterns borrowed from strandsagents.com, drawn in this system (no Strands text, logos,
+names, images or testimonials). Placeholder copy lives in `src/data/home.ts` (`HomeSections`); part
+names, outcomes and episodes always come from `course.ts`.
+
+| Section | Where | Surface and tokens | Motion |
+| --- | --- | --- | --- |
+| Announcement bar | Above the header, every page (`AnnouncementBar`) | `volt` band, ink text 14.50, ink focus ring; dismiss button 44px | none |
+| Course / Learn menus | Header (`nav/NavMenu.tsx`); mobile sheet groups | Panel `ink-raised`, `ink-line` border, `shadow-lift`; part accent bar beside "Part N" | 160ms fade + 4px rise from the trigger |
+| Model provider strip | Home, after the hub diagram, ink | Text chips `ink-raised` + volt dot, display 18-20px | 40s linear marquee, pauses on hover/focus; static wrap when reduced or switch off |
+| Explore by part | Home, paper | Tabs: selected = ink fill, others card; panel card + `CodeBlock` | panel rise-in (200ms) on change |
+| What you'll build | Home, ink | Cards `ink-raised`, volt link line, optional AWS service icon with its name | Reveal + 2px lift |
+| Learning hub | Home, paper | Card panel + ink-scope events column; dates "TBA" when missing | Reveal |
+| Closing command | Volt CTA band | Ink pill, volt `$`, copy button | none |
+
+Tabs: roving tabindex, Left/Right/Home/End, automatic activation. Menus: disclosure pattern (button
+`aria-expanded` + `aria-controls`, plain links), Escape returns focus, outside press or focus leaving
+closes, ArrowDown opens and focuses the first link.
 
 ## Shape, depth, spacing
 
