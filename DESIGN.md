@@ -1,159 +1,190 @@
-# AI Workboard (AWS) - Design System
+# AI Workboard (AWS) - Design System: "Ink and Volt"
 
-Locked 2026-10-28. Source of truth for every color, font, radius, shadow and motion value in the app.
-Anything not listed here is not allowed in components.
+Locked 2026-10-29 (replaces the 2026-10-28 teal "Developer Mono" system). Source of truth for every
+colour, font, radius, shadow and motion value. Tokens live in `src/index.css` (`@theme`); components use
+tokens only. Anything not listed here is not allowed in components.
 
-## Provenance
+## Direction
 
-- Generated with UI/UX Pro Max (`search.py --design-system`, dials V4/M3/D5). The first query
-  ("online course learning platform...") returned a kids-education profile (Baloo 2 + Comic Neue,
-  testimonials pattern) and was rejected as off-audience. The retry ("developer documentation technical
-  course") returned "Minimalism & Swiss Style" with the **Developer Mono** font pairing.
-- Palette roles come from the database's **LMS (Learning Management System)** palette (education teal +
-  course amber). Code surfaces use the database's **Developer Tool / API Developer Portal** dark palette.
-- Contrast adjustments (accessibility outranks palette): `#0D9488` fails 4.5:1 for text and white-on-teal
-  buttons, so text/button teal is darkened to `#0F766E` (Tailwind teal-700); `#0D9488` is kept for
-  non-text fills. Border role `#5EEAD4` (1.48:1 on white) is too loud for every card edge and too faint
-  for input boundaries, so it is split into a quiet decorative border and a 3:1 input border.
-- Taste layer: `taste-skill` (landing rules on `/`) + `output-skill` (no placeholders) everywhere.
-  App screens follow UI/UX Pro Max `ux` rules. lucide-react is used because the user chose it
-  (user instruction outranks Taste's icon preference).
+Cinematic ink surfaces with real imagery (stock video and photos) for every page header, paper reading
+surfaces for learning content, and one electric volt-lime signal colour. Each course part carries a
+catalog accent and a cover photo. Bold display type, a calm text face, a mono for labels and code.
 
-## Dials
+- Design read: video course platform (marketing home plus learning app) for AWS beginners; creative,
+  bold, premium, professional.
+- Dials: DESIGN_VARIANCE 6 (asymmetric bento on Home, split auth layout, overlapping enrol card),
+  MOTION_INTENSITY 6 on Home (interactive hero) and 4 elsewhere, VISUAL_DENSITY 5 (Dashboard 6).
+- Layers: UI/UX Pro Max (`ux` rules, "Immersive/Interactive" landing pattern: pause off-screen, mobile
+  fallback, reduced-motion final state), Taste `output-skill`, Design Motion Principles (Create mode).
+- Precedence: accessibility, then the user's brief, then this file, then taste rules.
 
-| Dial | Value | Why |
-| --- | --- | --- |
-| DESIGN_VARIANCE | 5 | Learning product: clear, mostly left-aligned layouts with one asymmetric hero and a bento on Home |
-| MOTION_INTENSITY | Home and Course 6; Dashboard 5; Lesson, Lab, Quiz, Certificate 4; Login and Register 3 | Phase 2 (user request): expressive one-time motion on the marketing pages, calm learning pages |
-| VISUAL_DENSITY | 5 | Standard app spacing; Home at 4, Dashboard at 6 |
+## Colour tokens
 
-## Color tokens (light theme only)
+Measured contrast (WCAG 2.x relative luminance, computed from the hex values).
 
-All values are CSS variables in `src/index.css` mapped to Tailwind v4 `@theme` colors.
-Measured contrast ratios (WCAG 2.x relative luminance) are listed where text or UI sits on the token.
+### Paper (reading surfaces)
 
 | Token | Hex | Role | Measured contrast |
 | --- | --- | --- | --- |
-| `--background` | `#F0FDFA` | Page canvas | - |
-| `--foreground` | `#134E4A` | Headings, body text | 9.09 on background, 9.48 on card |
-| `--card` | `#FFFFFF` | Cards, panels, inputs | - |
-| `--muted` | `#E8F1F4` | Subtle fills, table header, skeletons | - |
-| `--muted-foreground` | `#475569` | Secondary text, meta | 7.27 on background, 7.58 on card, 6.61 on muted |
-| `--primary` | `#0F766E` | Primary buttons, links, focus ring, active nav | white on primary 5.47; primary on background 5.25 |
-| `--primary-foreground` | `#FFFFFF` | Text on primary | 5.47 |
-| `--primary-hover` | `#115E59` | Primary button hover | white on it 7.58 |
-| `--primary-soft` | `#CCFBF1` | Selected/completed tint, info callouts | foreground on it 8.41, primary-hover on it 6.73 |
-| `--progress` | `#0D9488` | Progress fills, completed check icons (non-text) | 3.74 on card, 3.27 on muted (3:1 UI ok) |
-| `--accent` | `#D97706` | Achievement fills: certificate seal, passed-quiz icon (non-text) | 3.19 on card (3:1 UI ok) |
-| `--accent-foreground` | `#B45309` | Amber text on white | 5.02 on card |
-| `--accent-soft` | `#FEF3C7` | Amber tint (warnings, "untested" callout) | `#92400E` text on it 6.37 |
-| `--accent-soft-foreground` | `#92400E` | Text on accent-soft | 6.37 |
-| `--destructive` | `#DC2626` | Error text/icons, destructive button | 4.83 on card |
-| `--destructive-soft` | `#FEF2F2` | Error callout fill | `#B91C1C` text on it 5.91 |
-| `--destructive-soft-foreground` | `#B91C1C` | Text on destructive-soft | 5.91 |
-| `--border` | `#C7E3DE` | Decorative card edges, dividers (never the only boundary of a control) | - |
-| `--input` | `#5F8A85` | Input, checkbox and radio boundaries | 3.85 on card |
-| `--ring` | `#0F766E` | Focus ring (2px, 2px offset) | 5.25 on background |
-| `--code` | `#0F172A` | Code block surface | - |
-| `--code-foreground` | `#F8FAFC` | Code text | 17.06 |
-| `--code-muted` | `#94A3B8` | Code comments, line labels | 6.96 |
-| `--code-accent` | `#22C55E` | Shell prompt `$`, copy-success icon | 7.83 |
-| `--code-highlight` | `#5EEAD4` | Strings / keys in code | 12.07 |
+| `background` | `#F5F5F0` | Page canvas (paper) | - |
+| `foreground` | `#0D1222` | Headings, body text | 17.04 on background, 18.64 on card, 15.53 on muted |
+| `card` | `#FFFFFF` | Cards, panels, inputs | - |
+| `muted` | `#EAEBE4` | Table header, subtle fills, progress track | - |
+| `muted-foreground` | `#4A5163` | Secondary text, meta | 7.25 on background, 7.93 on card, 6.61 on muted |
+| `primary` | `#0D1222` | Primary buttons (ink), active nav, focus ring on paper | white on it 18.64 |
+| `primary-hover` | `#2A3150` | Primary button hover; text on `primary-soft` | 11.33 on primary-soft |
+| `primary-soft` | `#ECF7CC` | Lime tint: selected/complete fills, info callouts | - |
+| `link` | `#3F6212` | Text links on paper (always underlined) | 6.47 on background, 7.08 on card, 5.90 on muted, 6.32 on primary-soft |
+| `link-hover` | `#0D1222` | Link hover (plus 2px underline) | 17.04 on background |
+| `progress` | `#4D7C0F` | Progress fills, completed check icons (non-text) | 4.16 on muted (3:1 UI ok) |
+| `input` | `#6B7080` | Input, checkbox, radio boundaries | 4.94 on card |
+| `border` | `#D9DACF` | Decorative card edges (never the only boundary of a control) | - |
+| `accent-soft` / `accent-soft-foreground` | `#FEF3C7` / `#92400E` | Caution callouts ("Untested") | 6.37 |
+| `destructive-soft` / `destructive-soft-foreground` | `#FEF2F2` / `#B91C1C` | Errors | 5.91 |
 
-Rules:
-- One accent (amber) used only for achievement and caution. Teal is the brand/action color.
-- No gradients on surfaces or text. No purple, no glows, no pure black (`#000`).
-- Color is never the only signal: completed items also show a check icon and the word "Done"; errors
-  show an icon and text.
-- Dark code blocks are inset components, not page sections; the page theme stays light.
+### Ink (cinematic surfaces)
+
+| Token | Hex | Role | Measured contrast |
+| --- | --- | --- | --- |
+| `ink` | `#0B0F1C` | Header, footer, page bands, lesson theater, hero | - |
+| `ink-raised` | `#151B2E` | Cards inside ink bands | - |
+| `ink-line` | `#2A3350` | Borders on ink | - |
+| `on-ink` | `#F5F5F0` | Text on ink | 17.47 on ink, 15.64 on ink-raised |
+| `on-ink-muted` | `#B4BBCF` | Secondary text on ink | 9.96 on ink, 8.92 on ink-raised, 7.87 on `#1D2540` |
+| `volt` | `#C5F04A` | The one signal colour: CTAs, eyebrows, links and focus ring on ink, progress on ink | 14.50 on ink, 12.98 on ink-raised; ink text on volt 14.50 |
+| `volt-hover` | `#D8F985` | Volt button hover, badge text in ink scope | 11.68 on `#26301F` |
+
+Volt is never used as text on paper (1.3:1 on white). On paper the volt role is taken by `link`
+(lime-800) for text and by volt only as a non-text stripe (enrol card, certificate, CTA band background
+with ink text).
+
+### Part accents (catalog themes)
+
+`theme-ocean #38BDF8`, `theme-midnight #A5B4FC`, `theme-sunrise #FB923C`, `theme-slate #CBD5E1`,
+`theme-forest #4ADE80`, `theme-aurora #5EEAD4`. Decorative only (accent bars, spine segments, cover
+underlines), never text and never the only signal: the part number and title are always written next
+to them. Part 1 to 5 use ocean, midnight, sunrise, slate, forest; aurora (E12's theme) is unused.
+
+### Ink scope
+
+`.ink-scope` (with `.on-ink`) re-maps the paper tokens inside an ink band so any component renders in
+its on-ink form without variants: `foreground #F5F5F0`, `card #151B2E`, `muted #1D2540`,
+`muted-foreground #B4BBCF`, `primary #C5F04A` (button text ink), `primary-soft #26301F`,
+`progress #C5F04A`, `border #2A3350`, `input #8A93AB` (5.57 on ink-raised), `link #C5F04A`,
+`ring #C5F04A`, `color-scheme: dark` (native selects). Used by `PageBand`, the lesson theater, the
+Course instructor panel, the Dashboard certificate panel and the auth image panel.
+
+### Code
+
+`code #0F172A`, `code-foreground #F8FAFC` (17.06), `code-muted #94A3B8` (6.96), `code-accent #22C55E`
+(7.83), `code-highlight #5EEAD4` (12.07). Code blocks are inset components on paper pages.
+
+## Links (WCAG 1.4.1, 1.4.3)
+
+- `.link`: `link` colour, weight 600, 1px underline at 4px offset; hover: `link-hover` colour and a 2px
+  underline. Inside the ink scope the same class is volt on ink. Links are never told apart by colour
+  alone: the underline is always present.
+- Brand mark: "AI Workboard" plus a mono "(AWS)" label in volt on ink (header, footer) and `link`
+  colour on paper.
+- Header nav (on ink): current page in `on-ink` with a 2px volt underline; others `on-ink-muted`,
+  hover `on-ink` on a 10% paper tint. Mobile sheet (paper): current page underlined in `link`.
+- Card links (lab, quiz, episode cards) are whole-card links with a visible title, an arrow that moves
+  1 step on hover and a border change; they are not inline text.
 
 ## Typography
 
-Pairing: **Developer Mono** (UI/UX Pro Max): JetBrains Mono for display/headings/code, IBM Plex Sans
-for UI and body. Self-hosted with `@fontsource/*` (`font-display: swap`), no Google Fonts link.
+| Role | Font | Size (mobile / desktop) | Weight | Tracking |
+| --- | --- | --- | --- | --- |
+| Hero display (Home h1) | Bricolage Grotesque | 44 / 68 / 80px | 800 | -0.03em |
+| Band title (page h1) | Bricolage Grotesque | 32 / 48px (lg bands 38 / 60px) | 800 | -0.03em |
+| Section (h2) | Bricolage Grotesque | 26-30 / 32-40px | 700 | -0.02em |
+| Card title | Bricolage Grotesque | 18-20px | 700 | -0.01em |
+| Body | Instrument Sans | 16px (lede 18-20px) | 400 | 0 |
+| Meta, eyebrows, episode codes, durations | Geist Mono | 12-14px | 400-600 | 0 |
 
-| Role | Font | Size (mobile / desktop) | Weight | Line height | Tracking |
-| --- | --- | --- | --- | --- | --- |
-| Display (Home h1) | JetBrains Mono | 32px / 48px | 600 | 1.1 | -0.02em |
-| Page title (h1) | JetBrains Mono | 28px / 36px | 600 | 1.15 | -0.02em |
-| Section (h2) | JetBrains Mono | 22px / 28px | 600 | 1.2 | -0.01em |
-| Card / sub-section (h3) | IBM Plex Sans | 18px / 20px | 600 | 1.3 | 0 |
-| Body | IBM Plex Sans | 16px | 400 | 1.6 | 0 |
-| Small / meta | IBM Plex Sans | 14px | 500 | 1.5 | 0 |
-| Code, commands | JetBrains Mono | 14px | 400 | 1.6 | 0 |
+Self-hosted via `@fontsource-variable/*`. Body min 16px, meta min 14px (12px only for the course
+spine part labels and the lesson sidebar codes, which repeat visible information). Reading width
+max 68ch. No em or en dashes in visible strings. Eyebrows: Home hero uses one uppercase tracked line;
+page bands use a mono eyebrow with the part accent bar.
 
-Rules: body text min 16px, meta min 14px, never below 14px. Reading width max 68ch.
-No uppercase-tracked eyebrows except at most one per three Home sections. No em dashes (`—`) or
-en dashes (`–`) in any visible string; use a hyphen, comma, colon or two sentences.
+## Imagery and page bands
 
-## Shape, elevation, spacing
+- Every page opens with an ink band (`src/components/PageBand.tsx`): cover photo, `band-scrim`, mono
+  eyebrow with accent bar, h1, lede, free slot; optional framed cover window on large screens.
+  Course, Dashboard, Certificate and 404 use the hero poster frame; Labs uses the Building cover; Lab and
+  Quiz use their part's cover. The lesson page uses an ink "theater" around the player with the part
+  cover at 40% under the same scrim. Login and Register use a split layout (`AuthShell`).
+- Part covers (Pixabay, CREDITS.md): 640 and 1280 WebP, `srcset`, lazy except in bands.
+- Scrims (worst case = text over a pure-white image pixel; the hero video does contain white pixels):
 
-- Radius: `--radius-control: 6px` (buttons, inputs, badges, checkboxes 4px), `--radius-panel: 10px`
-  (cards, panels, code blocks, dialogs). No pills except the round avatar monogram.
-- Shadows: only `--shadow-raised: 0 1px 2px rgb(19 78 74 / 0.06), 0 4px 12px rgb(19 78 74 / 0.06)` for
-  the sticky header, sticky enrol card and dialogs. Cards use a 1px `--border` edge, no shadow.
-- Spacing: 4px base. Section padding `py-16 md:py-24` on Home, `py-8 md:py-12` on app pages.
-  Container `max-w-6xl mx-auto px-4 sm:px-6 lg:px-8`.
-- Z-index scale (in `src/lib/z.ts`): header 30, mobile sheet/overlay 40, dialog 50, toast 60.
+| Surface | Scrim (ink alpha in the text zone) | on-ink | on-ink-muted | volt |
+| --- | --- | --- | --- | --- |
+| Home hero, desktop (copy within 48% of width) | >= 0.80 | 9.60 | 5.48 | 7.97 |
+| Home hero, mobile (copy in the lower 60%) | >= 0.84 | 11.17 | 6.37 | 9.27 |
+| Page band, any width (min 0.78 at the right edge) | >= 0.78 | 8.88 | 5.07 | 7.37 |
+| Page band, below 768px (flat) | 0.88 | 12.75 | 7.27 | 10.58 |
+| Video placeholder | 0.86 | 11.88 | 6.78 | 9.86 |
+| Lesson theater (photo at 40%, then band scrim) | - | 14.12 | 8.05 | 11.72 |
 
-## Iconography
+## Interactive hero (Home)
 
-lucide-react only, `strokeWidth={1.75}` everywhere, sizes 16 (inline), 20 (buttons/list), 24 (feature).
-Decorative icons next to text get `aria-hidden="true"`. Icon-only buttons get an `aria-label` and a 44x44
-hit area. No emoji anywhere.
+Layers, back to front: background video (`hero-layer-bg`), hero scrim, pointer network canvas
+(`HeroNetwork`), copy (`hero-layer-fg`). No pause or play control on the hero (user requirement).
 
-## Brand mark
+- Network: plain 2D canvas, 24 to 110 nodes (one per 14,000 px2), drifting; faint paper lines
+  between nodes closer than 130px. With a fine pointer the nodes within 220px are drawn in (held off
+  inside 48px), link to the cursor in volt and a soft volt spotlight (radius 300px) follows it.
+- Parallax: the pointer offset (-1..1, eased) moves the video -14/-10px (scaled 1.06 so no edge shows),
+  the copy +6/+4px and each node by up to 22/16px times its depth. No tilt (text stays crisp).
+- Text safety: the canvas knocks itself out over the copy box (destination-out, feathered 24px), so
+  the network keeps about 11% strength behind the text. Hero copy uses `on-ink` and volt only. Worst
+  case with a volt line over a white pixel: on-ink 7.69 and volt 6.38 at the 0.80 scrim; the headline
+  where it runs past 48% of the width (scrim about 0.69, large text) 5.31.
+- Touch / no hover: no pointer tracking; ambient drift plus a 900ms volt ripple that pushes nearby
+  nodes on tap. Listeners are passive on the hero section; the canvas has `pointer-events: none`.
+- Performance: requestAnimationFrame, frame-rate independent easing, devicePixelRatio capped at 2,
+  paused when the hero is off-screen (IntersectionObserver) or the tab is hidden, resized with
+  ResizeObserver, no new dependencies.
+- Reduced motion: no canvas, no parallax, poster image instead of video. Footer "Background video"
+  switch off: poster, one still network frame, no pointer tracking.
 
-Wordmark "AI Workboard" in JetBrains Mono 600 with a small `(AWS)` suffix in muted text, preceded by a
-single geometric mark: a 20px rounded square in `--primary` with a 2x2 grid cut-out (simple CSS/SVG
-rectangles, no illustration). No reference-site name, logo, copy or imagery.
-
-## Motion (phase 2 contract; replaces the phase-1 "no automatic, scroll or looping motion" rules)
-
-Weighting (Design Motion Principles): Home and Course, Jakub primary and Jhey secondary; Lesson, Lab, Quiz,
-Dashboard, Emil primary (frequency gate: feedback motion only).
+## Motion
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--ease-out` | `cubic-bezier(0.22, 1, 0.36, 1)` | Enters, reveals, draw-in |
-| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | State change while visible (progress ring) |
-| `--duration-fast` | 120ms | Hover/press color and `scale(0.98)` press |
-| `--duration-base` | 200ms | Accordion content fade-in, mobile sheet enter, chevron rotate |
-| `--duration-exit` | 150ms | Sheet/dialog exit (subtler than enter) |
-| `--duration-slow` | 320ms | Progress bar fill, quiz result rise |
-| `--duration-reveal` | 520ms | Scroll reveal (opacity, 12px rise, 4px blur), node fade-in |
-| `--duration-draw` | 900ms | Hero hub connectors and topo contours drawing in |
+| `--ease-out` | `cubic-bezier(0.22, 1, 0.36, 1)` | Enters, reveals, hovers |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | Progress ring fill |
+| `--duration-fast` | 120ms | Hover colour, arrow nudge, press `scale(0.98)` |
+| `--duration-base` | 200ms | Card lift (-2px plus shadow), accordion, sheet enter |
+| `--duration-exit` | 150ms | Sheet/dialog exit |
+| `--duration-slow` | 320ms | Progress bar fill |
+| `--duration-reveal` | 520ms | Scroll reveal (opacity, 12px rise, 4px blur) |
+| `--duration-draw` | 900ms | Hub diagram draw-in (once, no loop) |
 | `--duration-ring` | 700ms | Progress ring fill |
-| `--duration-flow` | 2800ms, linear, infinite | Hero request flow (the only loop) |
-| `--stagger` | 70ms, capped at 8 steps | Reveal and node stagger |
+| hero rise | 700ms, 80ms stagger | Hero copy entrance |
 
-Allowed:
-- Home and Course: one-time scroll reveals of headings, grid items and sections; the hero hub diagram
-  draws in once, then requests flow into the hub in a slow loop. The loop has a visible
-  "Pause animation" toggle (44x44, `aria-pressed`) and is the only looping animation on the site.
-- Topographic backdrops draw in once when revealed; the grid backdrop is static.
-- Progress rings fill once; a lab step check badge pops once when ticked (180ms); quiz results rise in.
-- Video "Up next": a 5-second countdown, cancellable; replaced by a "Play next" button under reduced
-  motion (no autoplay).
+Looping motion: only the hero background video and the hero network, both stopped by the footer
+"Background video" switch (WCAG 2.2.2) and both absent under `prefers-reduced-motion` (the switch is
+then hidden because nothing moves). Only `transform`, `opacity`, `filter`, `stroke-dashoffset` and the
+canvas animate. The global reduced-motion rule sets every CSS duration to 0.01ms as a backstop.
 
-Rules: only `transform`, `opacity`, `filter` and `stroke-dashoffset` animate; no bounce; no exit
-animations added; no parallax or scroll-hijack. Under `prefers-reduced-motion: reduce` the components
-render their final state (no flow layer, no pause toggle, reveals visible, rings and badges static) and
-the global rule sets every transition/animation duration to 0.01ms as a backstop. Reveals also render
-visible when `IntersectionObserver` is unavailable.
+## Shape, depth, spacing
 
-## Background art and AWS diagrams
+- Radius: `--radius-control 6px` (buttons, inputs, badges; checkboxes 4px), `--radius-panel 10px`.
+- Shadows: `--shadow-raised` (cards at rest), `--shadow-lift` (hover lift, enrol card, band cards,
+  certificate). `.card-lift` = raised plus -2px / lift on hover (no lift under reduced motion).
+- Container `max-w-6xl` with `px-4 sm:px-6 lg:px-8`. Bands `py-10 md:py-14` (lg `py-14 md:py-20`),
+  content `py-10 md:py-14`.
+- Touch targets at least 44px (`min-h-11`); focus ring 2px with 2px offset, ink on paper, volt on ink.
 
-- All art is original inline SVG/CSS in the existing color tokens: hero hub diagram, `grid` and `topo`
-  section backdrops, six part motifs (console, text, media, shield, code, explore). Backdrops and motifs
-  are `aria-hidden` and `pointer-events-none`; the hub diagram is `role="img"` with a full label.
-- Backdrop contrast (worst pixel = text over a line): grid lines are primary at 9% over the canvas
-  (`#DCF1ED`): foreground 8.05, muted 6.44, primary 4.65. Topo lines are primary at 10% (`#D9F0EC`):
-  foreground 7.97, muted 6.37, primary 4.60. All text stays at or above 4.5:1.
-- Official AWS Architecture Icons (`public/aws-icons/`, release 07/31/2026) are used unmodified as
-  `<img>`/`<image>` files: the Amazon Bedrock icon at the hero hub, the AWS Cloud and Region group icons
-  on the hero frames, and service icons on lab cards. They keep their official colors; the frames use the
-  official AWS group colors `#242F3E` (AWS Cloud, solid) and `#00A4A6` (Region, dashed). These two values
-  are allowed only inside AWS-style frames. Frame label text uses `--foreground` (the Region teal is
-  3:1 on white, too low for text). Never recolor, crop or rotate the icons, and never use them as the
-  AI Workboard mark (see `public/aws-icons/README.md`).
+## Print
+
+The certificate prints on one A4 landscape page (`@page size: A4 landscape`, 250mm wide card), with
+the header, footer, band and buttons hidden (`no-print`) and the volt top stripe kept
+(`print-color-adjust: exact`).
+
+## Iconography and AWS assets
+
+lucide-react, `strokeWidth 1.75`, 16/20/24px; decorative icons `aria-hidden`. Official AWS
+Architecture Icons (`public/aws-icons/`) unmodified for services on lab cards and the hub diagram; the
+two AWS group colours (`#242F3E`, `#00A4A6`) are allowed only inside the hub diagram frames. No emoji.

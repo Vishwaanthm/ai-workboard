@@ -39,7 +39,7 @@ export function ErrorSummary({
         <ul className="mt-1 flex flex-col">
           {errors.map((e) => (
             <li key={e.field}>
-              <a href={`#${e.field}`} className="inline-flex min-h-11 items-center underline underline-offset-4">
+              <a href={`#${e.field}`} className="link inline-flex min-h-11 items-center text-destructive-soft-foreground">
                 {e.message}
               </a>
             </li>

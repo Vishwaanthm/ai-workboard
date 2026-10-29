@@ -4,7 +4,7 @@ import type { LabStatus } from '@/lib/progress'
 export function LabStatusLabel({ status, done, total }: { status: LabStatus; done: number; total: number }) {
   if (status === 'done') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
         <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="size-4 text-progress" />
         Done
       </span>

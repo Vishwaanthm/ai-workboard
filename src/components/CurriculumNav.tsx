@@ -1,5 +1,6 @@
 import { CheckCircle2, Circle, CircleDashed } from 'lucide-react'
 import { NavLink } from 'react-router'
+import { coverFor } from '@/components/media/partCovers'
 import { episodesInPart } from '@/data'
 import { useAppState } from '@/context/useAppState'
 import { cn } from '@/lib/utils'
@@ -14,7 +15,8 @@ export function CurriculumNav({ onNavigate }: { onNavigate?: () => void }) {
         {data.parts.map((part) => (
           <li key={part.id}>
             <p className="flex items-baseline justify-between gap-2 px-2 font-mono text-sm font-semibold text-muted-foreground">
-              <span>
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className={cn('h-1 w-4 shrink-0 self-center rounded-full', coverFor(part).accent)} />
                 {part.title}
                 {part.optional ? ' (optional)' : ''}
               </span>

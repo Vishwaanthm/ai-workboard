@@ -7,6 +7,7 @@ import { validateProgress } from '@/lib/schema'
 import { certificateFor, cloneData, completeProgress, LEARNER, readProgress, renderApp, seedLearner } from './helpers'
 
 const heading = (name: string | RegExp) => screen.findByRole('heading', { level: 1, name })
+const title = (id: number) => courseData.episodes.find((e) => e.id === id)!.title
 
 describe('regressions from code inspection 2', () => {
   it('REV-009: a failed session write rolls the new account back', async () => {
@@ -60,7 +61,7 @@ describe('regressions from code inspection 1', () => {
     await user.type(screen.getByLabelText('Email'), LEARNER.email)
     await user.type(screen.getByLabelText('Password'), LEARNER.password)
     await user.click(screen.getByRole('button', { name: 'Log in' }))
-    await heading('Episode 3 title')
+    await heading(title(3))
     expect(second.router.state.location.pathname).toBe('/learn/3')
   })
 
@@ -82,10 +83,10 @@ describe('regressions from code inspection 1', () => {
     const user = userEvent.setup()
     seedLearner()
     renderApp('/learn/1')
-    await heading('Episode 1 title')
+    await heading(title(1))
     const lessonNav = screen.getByRole('navigation', { name: 'Episodes' })
-    await user.click(within(lessonNav).getByRole('link', { name: /Episode 2 title/ }))
-    expect(await heading('Episode 2 title')).toHaveFocus()
+    await user.click(within(lessonNav).getByRole('link', { name: new RegExp(title(2)) }))
+    expect(await heading(title(2))).toHaveFocus()
     const crumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
     await user.click(within(crumbs).getByRole('link', { name: 'Course' }))
     expect(await heading('Amazon Bedrock for Beginners')).toHaveFocus()

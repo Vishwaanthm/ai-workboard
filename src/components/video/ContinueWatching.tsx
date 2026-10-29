@@ -16,7 +16,7 @@ export function ContinueWatching({ className }: { className?: string }) {
     <Link
       to={`/learn/${episode.id}`}
       className={cn(
-        'flex flex-col gap-3 rounded-panel border border-progress bg-primary-soft p-4 transition-colors duration-[120ms] hover:border-primary',
+        'flex flex-col gap-3 rounded-panel border border-progress bg-primary-soft p-4 transition-colors duration-[120ms] hover:border-foreground',
         className,
       )}
     >

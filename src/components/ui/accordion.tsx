@@ -19,7 +19,7 @@ export function AccordionTrigger({
       <AccordionPrimitive.Trigger
         className={cn(
           'group flex min-h-14 flex-1 cursor-pointer items-center justify-between gap-4 py-3 text-left',
-          'transition-colors duration-[120ms] hover:text-primary',
+          'transition-colors duration-[120ms] hover:bg-muted/60',
           className,
         )}
         {...props}

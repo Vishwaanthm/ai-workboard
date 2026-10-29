@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { describedBy, ErrorSummary, Field, PasswordInput, type FieldError } from '@/components/AuthForm'
-import { Container } from '@/components/misc'
+import { AuthShell } from '@/components/AuthShell'
 import { PageHeading } from '@/components/PageHeading'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,9 +49,8 @@ export default function LoginPage() {
     .map((f) => ({ field: f, message: errors[f] ?? '' }))
 
   return (
-    <Container className="py-10 md:py-16">
-      <div className="mx-auto max-w-md">
-        <PageHeading title="Log in" />
+    <AuthShell>
+        <PageHeading title="Log in" className="text-[34px] leading-[1.05] font-extrabold md:text-[44px]" />
         <p className="mt-3 text-muted-foreground">Accounts are stored only in this browser.</p>
         <form onSubmit={submit} noValidate className="mt-8 flex flex-col gap-5">
           <ErrorSummary errors={summary} formError={formError} attempt={attempt} />
@@ -85,12 +84,11 @@ export default function LoginPage() {
           New here?{' '}
           <Link
             to={next ? `/register?next=${encodeURIComponent(next)}` : '/register'}
-            className="font-medium text-primary underline underline-offset-4"
+            className="link"
           >
             Create an account
           </Link>
         </p>
-      </div>
-    </Container>
+    </AuthShell>
   )
 }

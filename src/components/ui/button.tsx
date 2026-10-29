@@ -18,9 +18,10 @@ export const buttonVariants = cva(
         secondary: 'border border-input bg-card text-foreground hover:bg-primary-soft',
         ghost: 'text-foreground hover:bg-primary-soft',
         destructive: 'bg-destructive text-primary-foreground hover:bg-destructive-soft-foreground',
-        link: 'px-0 text-primary underline-offset-4 hover:underline active:scale-100',
+        link: 'px-0 font-semibold text-link underline decoration-1 underline-offset-4 hover:text-link-hover hover:decoration-2 active:scale-100',
         volt: 'bg-volt font-semibold text-ink hover:bg-volt-hover',
         ghostInk: 'border border-on-ink-muted/60 text-on-ink hover:border-on-ink hover:bg-on-ink/10',
+        onInk: 'text-on-ink hover:bg-on-ink/10',
       },
       size: {
         md: 'min-h-11 px-4 py-2',

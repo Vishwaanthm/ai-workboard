@@ -4,14 +4,15 @@ import { Link, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { LabServiceIcons } from '@/components/art/LabServiceIcons'
 import { CodeBlock } from '@/components/CodeBlock'
+import { coverFor } from '@/components/media/partCovers'
 import { Container, NotFound } from '@/components/misc'
-import { PageHeading } from '@/components/PageHeading'
+import { PageBand } from '@/components/PageBand'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Progress } from '@/components/ui/progress'
-import { getLab, getEpisode } from '@/data'
+import { getLab, getEpisode, getPart } from '@/data'
 import { useAppState } from '@/context/useAppState'
 import { isStepDone, labStepCount } from '@/lib/progress'
 import { usePrefersReducedMotion } from '@/lib/motion'
@@ -26,6 +27,8 @@ export default function LabPage() {
   if (!lab) return <NotFound />
 
   const episode = getEpisode(data, lab.episodeId)
+  const part = episode ? getPart(data, episode.partId) : undefined
+  const cover = coverFor(part)
   const total = lab.steps.length
   const doneCount = labStepCount(progress, lab.id)
 
@@ -37,24 +40,31 @@ export default function LabPage() {
   }
 
   return (
-    <Container className="py-10 md:py-14">
-      <div className="max-w-3xl">
-        <Button variant="link" asChild>
-          <Link to="/labs">
-            <ArrowLeft aria-hidden="true" strokeWidth={1.75} />
+    <>
+      <PageBand
+        title={lab.title}
+        cover={cover}
+        accent={cover.accent}
+        figure={cover}
+        eyebrow={part ? `Lab, Part ${part.id}: ${part.title}` : 'Lab'}
+        top={
+          <Link to="/labs" className="link mb-4 inline-flex min-h-11 items-center gap-2">
+            <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="size-5" />
             All labs
           </Link>
-        </Button>
-        <PageHeading title={lab.title} className="mt-2" />
-        {episode ? (
-          <p className="mt-3 text-muted-foreground">
-            Lab for{' '}
-            <Link to={`/learn/${episode.id}`} className="font-medium text-primary underline underline-offset-4">
-              {episode.title}
-            </Link>
-          </p>
-        ) : null}
-        <LabServiceIcons services={lab.services} size="lg" withLabels className="mt-5" />
+        }
+        lede={
+          episode ? (
+            <>
+              Lab for{' '}
+              <Link to={`/learn/${episode.id}`} className="link">
+                {episode.title}
+              </Link>
+            </>
+          ) : undefined
+        }
+      >
+        <LabServiceIcons services={lab.services} size="lg" withLabels className="mt-6" />
         <ul aria-label="Topics" className="mt-4 flex flex-wrap gap-2">
           {lab.tags.map((tag) => (
             <li key={tag}>
@@ -62,15 +72,18 @@ export default function LabPage() {
             </li>
           ))}
         </ul>
+      </PageBand>
 
+    <Container className="py-10 md:py-14">
+      <div className="max-w-3xl">
         {lab.untested ? (
-          <Callout tone="caution" title="Untested" className="mt-6">
+          <Callout tone="caution" title="Untested">
             <p>This lab has not been run end to end yet. If a step fails, check the error message before moving on.</p>
           </Callout>
         ) : null}
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          <section aria-labelledby="objectives-heading">
+        <div className="mt-8 grid gap-4 first:mt-0 sm:grid-cols-2">
+          <section aria-labelledby="objectives-heading" className="rounded-panel border border-border bg-card p-5 shadow-raised">
             <h2 id="objectives-heading" className="text-[22px]">
               What you will do
             </h2>
@@ -80,7 +93,7 @@ export default function LabPage() {
               ))}
             </ul>
           </section>
-          <section aria-labelledby="prereq-heading">
+          <section aria-labelledby="prereq-heading" className="rounded-panel border border-border bg-card p-5 shadow-raised">
             <h2 id="prereq-heading" className="text-[22px]">
               Before you start
             </h2>
@@ -98,7 +111,7 @@ export default function LabPage() {
 
         <section aria-labelledby="steps-heading" className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 id="steps-heading" className="text-[22px] md:text-[28px]">
+            <h2 id="steps-heading" className="text-[28px] leading-[1.05] md:text-[36px]">
               Steps
             </h2>
             <p className="text-sm text-muted-foreground" aria-live="polite">
@@ -114,7 +127,7 @@ export default function LabPage() {
                 <li
                   key={step.id}
                   className={cn(
-                    'rounded-panel border bg-card p-4 transition-colors duration-[120ms] sm:p-5',
+                    'rounded-panel border bg-card p-4 shadow-raised transition-colors duration-[120ms] sm:p-5',
                     checked ? 'border-progress' : 'border-border',
                   )}
                 >
@@ -193,5 +206,6 @@ export default function LabPage() {
         </div>
       </div>
     </Container>
+    </>
   )
 }

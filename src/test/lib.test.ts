@@ -21,13 +21,16 @@ import { parseTimestamp, parseVtt } from '@/lib/vtt'
 import {
   continueWatching,
   courseDuration,
+  durationLabel,
   formatDuration,
   recordWatch,
   resumePosition,
   spokenDuration,
+  spokenDurationLabel,
+  totalDurationLabel,
   watchState,
 } from '@/lib/watch'
-import { certificateFor, completeProgress, LEARNER } from './helpers'
+import { certificateFor, cloneData, completeProgress, LEARNER } from './helpers'
 
 const ctx = { email: LEARNER.email, data: courseData }
 
@@ -207,16 +210,28 @@ describe('progress rules', () => {
     // Parts 3 to 5 have no quiz: the next step is their first unwatched episode.
     expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 6 } })
     for (const id of [6, 7, 8, 9, 10, 11]) p = setEpisodeComplete(p, id, true)
+    // Every part is required: the last episode comes before the final.
+    expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 12 } })
+    p = setEpisodeComplete(p, 12, true)
     expect(nextStep(p, courseData)).toMatchObject({ kind: 'final' })
     p = recordQuiz(p, finalQuiz(courseData)!, 3)
     expect(nextStep(p, courseData)).toEqual({ kind: 'certificate' })
   })
 
   it('lists unmet certificate requirements; optional episodes are not required', () => {
-    expect(certificateEligibility(emptyProgress(), courseData)).toHaveLength(11 + partQuizzes(courseData).length + 1)
+    expect(certificateEligibility(emptyProgress(), courseData)).toHaveLength(12 + partQuizzes(courseData).length + 1)
     const p = completeProgress()
     p.completedEpisodes = p.completedEpisodes.filter((id) => id !== 12)
-    expect(isEligible(p, courseData)).toBe(true)
+    expect(isEligible(p, courseData)).toBe(false)
+    // Mark episode 12 optional, or put it in an optional part: then it is no longer needed.
+    const data = cloneData()
+    data.episodes[11] = { ...data.episodes[11]!, optional: true }
+    expect(certificateEligibility(emptyProgress(), data)).toHaveLength(11 + partQuizzes(data).length + 1)
+    expect(isEligible(p, data)).toBe(true)
+    const optionalPart = cloneData()
+    optionalPart.parts.push({ id: 6, title: 'Extra', outcome: 'Extra.', optional: true })
+    optionalPart.episodes[11] = { ...optionalPart.episodes[11]!, partId: 6 }
+    expect(isEligible(p, optionalPart)).toBe(true)
   })
 
   it('knows the last episode of each part', () => {
@@ -276,9 +291,15 @@ describe('watch progress', () => {
 
   it('formats durations and course totals', () => {
     expect(formatDuration(420)).toBe('7:00')
-    expect(formatDuration(5520)).toBe('92:00')
-    expect(courseDuration(courseData)).toBe(5520)
+    expect(formatDuration(5447)).toBe('90:47')
+    expect(courseDuration(courseData)).toBe(5447)
     expect(spokenDuration(450)).toBe('7 minutes 30 seconds')
+    // Approximate (catalog target) lengths round to whole minutes with a "≈" mark.
+    expect(durationLabel(441)).toBe('7:21')
+    expect(durationLabel(480, true)).toBe('≈ 8 min')
+    expect(spokenDurationLabel(480, true)).toBe('about 8 minutes')
+    expect(totalDurationLabel(courseData.episodes)).toBe('≈ 91 min')
+    expect(totalDurationLabel(courseData.episodes.slice(0, 2))).toBe('13:47')
   })
 
   it('keeps the furthest point, resumes mid-episode, and counts 90% as watched', () => {

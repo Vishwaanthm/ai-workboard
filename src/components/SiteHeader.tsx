@@ -7,10 +7,18 @@ import { BrandMark } from './BrandMark'
 import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
 
+/** Header nav on ink: active page is on-ink text with a volt underline; others are muted until hovered. */
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'inline-flex min-h-11 items-center rounded-control px-3 font-medium transition-colors duration-[120ms]',
-    isActive ? 'text-primary underline decoration-2 underline-offset-8' : 'text-foreground hover:text-primary',
+    'inline-flex min-h-11 items-center rounded-control px-3 font-medium underline-offset-8 transition-colors duration-[120ms]',
+    isActive ? 'text-on-ink underline decoration-volt decoration-2' : 'text-on-ink-muted hover:bg-on-ink/10 hover:text-on-ink',
+  )
+
+/** Same links inside the paper mobile sheet. */
+const sheetLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    'inline-flex min-h-11 items-center rounded-control px-3 font-medium underline-offset-8 transition-colors duration-[120ms]',
+    isActive ? 'text-foreground underline decoration-link decoration-2' : 'text-foreground hover:bg-muted',
   )
 
 export function SiteHeader() {
@@ -32,9 +40,9 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="no-print sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+    <header className="no-print on-ink sticky top-0 z-30 border-b border-ink-line bg-ink/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <BrandMark />
+        <BrandMark onInk />
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {links.map((l) => (
@@ -47,20 +55,20 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <>
-              <span className="max-w-40 truncate text-sm text-muted-foreground" title={user.name}>
+              <span className="max-w-40 truncate text-sm text-on-ink-muted" title={user.name}>
                 {user.name}
               </span>
-              <Button variant="ghost" onClick={handleLogout}>
+              <Button variant="onInk" onClick={handleLogout}>
                 <LogOut aria-hidden="true" strokeWidth={1.75} />
                 Log out
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="onInk" asChild>
                 <Link to="/login">Log in</Link>
               </Button>
-              <Button asChild>
+              <Button variant="volt" asChild>
                 <Link to="/register">Start the course</Link>
               </Button>
             </>
@@ -69,14 +77,14 @@ export function SiteHeader() {
 
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+            <Button variant="onInk" size="icon" className="md:hidden" aria-label="Open menu">
               <Menu aria-hidden="true" strokeWidth={1.75} />
             </Button>
           </SheetTrigger>
           <SheetContent title="Menu" description="Site navigation and account links">
             <nav aria-label="Main" className="flex flex-col gap-1">
               {links.map((l) => (
-                <NavLink key={l.to} to={l.to} className={navLinkClass} onClick={close}>
+                <NavLink key={l.to} to={l.to} className={sheetLinkClass} onClick={close}>
                   {l.label}
                 </NavLink>
               ))}

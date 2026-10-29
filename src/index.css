@@ -30,6 +30,9 @@
   --color-on-ink-muted: #b4bbcf;
   --color-volt: #c5f04a;
   --color-volt-hover: #d8f985;
+  /* Link text on paper surfaces: lime-800, 6.4:1 on paper, 7.0:1 on card, 5.8:1 on muted. */
+  --color-link: #3f6212;
+  --color-link-hover: #0d1222;
   --color-theme-ocean: #38bdf8;
   --color-theme-midnight: #a5b4fc;
   --color-theme-sunrise: #fb923c;
@@ -61,7 +64,6 @@
   --duration-reveal: 520ms;
   --duration-draw: 900ms;
   --duration-ring: 700ms;
-  --duration-flow: 2800ms;
   --stagger: 70ms;
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
@@ -172,7 +174,7 @@
   filter: blur(4px);
 }
 
-/* Hero hub diagram: draw-in once, then a slow request flow that can be paused. */
+/* Hero hub diagram: draws in once (no loop). */
 .hub-art--animate .hub-link {
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
@@ -190,20 +192,6 @@
   transform-box: fill-box;
   transform-origin: center;
   animation: hub-core-in var(--duration-reveal) var(--ease-out) both;
-}
-.hub-flow-dot {
-  stroke-dasharray: 3 97;
-  stroke-dashoffset: 100;
-  opacity: 0;
-  animation:
-    hub-flow var(--duration-flow) linear infinite,
-    hub-flow-fade 400ms var(--ease-out) forwards;
-  animation-delay:
-    calc(1100ms + var(--i, 0) * -311ms),
-    1100ms;
-}
-.hub-art--paused .hub-flow-dot {
-  animation-play-state: paused;
 }
 @keyframes hub-draw {
   to {
@@ -226,38 +214,6 @@
     transform: scale(1);
   }
 }
-@keyframes hub-flow {
-  from {
-    stroke-dashoffset: 100;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes hub-flow-fade {
-  to {
-    opacity: 0.9;
-  }
-}
-
-/* Backdrops: a static masked grid; topo contours draw in once when revealed. */
-.backdrop-grid {
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--color-primary) 9%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 9%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 30%, transparent 75%);
-}
-.backdrop-topo--draw path {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-}
-.backdrop-topo--draw.is-revealed path {
-  transition: stroke-dashoffset var(--duration-draw) var(--ease-out);
-  transition-delay: calc(var(--i, 0) * var(--stagger));
-  stroke-dashoffset: 0;
-}
-
 /* Progress ring fill and the lab step badge pop. */
 .ring-fill--animate {
   transition: stroke-dashoffset var(--duration-ring) var(--ease-in-out);
@@ -298,6 +254,10 @@
   }
   .no-print {
     display: none !important;
+  }
+  .certificate-stripe {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
   .print-only-area {
     box-shadow: none !important;
@@ -341,6 +301,85 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .group:hover .part-cover {
+    transform: none;
+  }
+}
+
+/* ---- Ink scope: any component inside an ink band renders in its on-ink form (DESIGN.md "Ink scope") ---- */
+.ink-scope {
+  color-scheme: dark;
+  color: var(--color-on-ink);
+  --color-foreground: #f5f5f0;
+  --color-background: #0b0f1c;
+  --color-card: #151b2e;
+  --color-muted: #1d2540;
+  --color-muted-foreground: #b4bbcf;
+  --color-primary: #c5f04a;
+  --color-primary-foreground: #0b0f1c;
+  --color-primary-hover: #d8f985;
+  --color-primary-soft: #26301f;
+  --color-progress: #c5f04a;
+  --color-border: #2a3350;
+  --color-input: #8a93ab;
+  --color-ring: #c5f04a;
+  --color-link: #c5f04a;
+  --color-link-hover: #f5f5f0;
+  --color-code: #0b0f1c;
+}
+
+@layer components {
+  /* Inline and standalone text links: always underlined, link colour, thicker underline on hover. */
+  .link {
+    color: var(--color-link);
+    font-weight: 600;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      text-decoration-thickness var(--duration-fast) var(--ease-out);
+  }
+  .link:hover {
+    color: var(--color-link-hover);
+    text-decoration-thickness: 2px;
+  }
+  /* Cards with depth: raised at rest, lifted on hover (transform + shadow only). */
+  .card-lift {
+    box-shadow: var(--shadow-raised);
+    transition:
+      transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+/* Page band scrim over a cover photo: every line of band text stays at or above 4.5:1. */
+.band-scrim {
+  background: linear-gradient(90deg, rgb(11 15 28 / 0.95) 0%, rgb(11 15 28 / 0.86) 55%, rgb(11 15 28 / 0.78) 100%);
+}
+@media (max-width: 767px) {
+  .band-scrim {
+    background: rgb(11 15 28 / 0.88);
+  }
+}
+
+/* ---- Interactive hero: pointer parallax (CSS variables --hx/--hy in -1..1, set by HeroNetwork) ---- */
+.hero-layer-bg {
+  transform: translate3d(calc(var(--hx, 0) * -14px), calc(var(--hy, 0) * -10px), 0) scale(1.06);
+}
+.hero-layer-fg {
+  transform: translate3d(calc(var(--hx, 0) * 6px), calc(var(--hy, 0) * 4px), 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-layer-bg,
+  .hero-layer-fg {
+    transform: none;
+  }
+  .card-lift:hover {
     transform: none;
   }
 }

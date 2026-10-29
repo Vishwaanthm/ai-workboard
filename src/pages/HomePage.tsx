@@ -1,10 +1,11 @@
 import { ArrowRight, Award, BookOpen, FlaskConical, ListChecks } from 'lucide-react'
+import { useRef } from 'react'
 import { Link } from 'react-router'
 import { HubArt } from '@/components/art/HubArt'
 import { LabServiceIcons } from '@/components/art/LabServiceIcons'
 import { BackgroundVideo } from '@/components/media/BackgroundVideo'
+import { HeroNetwork } from '@/components/media/HeroNetwork'
 import { HERO_MEDIA, PART_COVERS } from '@/components/media/partCovers'
-import { SectionBackdrop } from '@/components/art/SectionBackdrop'
 import { Container } from '@/components/misc'
 import { Reveal } from '@/components/motion/Reveal'
 import { PageHeading } from '@/components/PageHeading'
@@ -33,15 +34,24 @@ export default function HomePage() {
   const startHref = user ? nextStepHref(nextStep(progress, data)) : '/register'
   const startLabel = user ? 'Continue the course' : 'Start the course'
   const featuredLabs = data.labs.slice(0, 5)
+  const heroRef = useRef<HTMLElement>(null)
+  const copyRef = useRef<HTMLDivElement>(null)
 
   return (
     <>
-      <section className="on-ink relative isolate flex min-h-[88dvh] items-end overflow-hidden bg-ink pt-28 pb-14 md:items-center md:pb-20">
-        <BackgroundVideo {...HERO_MEDIA} className="-z-10" />
+      <section
+        ref={heroRef}
+        className="on-ink relative isolate flex min-h-[88dvh] items-end overflow-hidden bg-ink pt-28 pb-14 md:items-center md:pb-20"
+      >
+        {/* Depth layers: video (back), scrim, pointer-reactive network, copy (front). See HeroNetwork. */}
+        <div aria-hidden="true" className="hero-layer-bg pointer-events-none absolute inset-0 -z-10">
+          <BackgroundVideo {...HERO_MEDIA} />
+        </div>
         {/* Scrim: keeps every line of hero text at or above 4.5:1 over the brightest video frame. */}
         <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0 -z-10" />
-        <Container className="relative">
-          <div className="hero-rise max-w-[46rem]">
+        <HeroNetwork hostRef={heroRef} copyRef={copyRef} />
+        <Container className="hero-layer-fg relative">
+          <div ref={copyRef} className="hero-rise max-w-[46rem]">
             <p className="text-sm font-semibold tracking-[0.14em] text-volt uppercase">A course by {data.course.instructorOrg}</p>
             <PageHeading
               title={data.course.title}
@@ -49,7 +59,7 @@ export default function HomePage() {
             >
               {data.course.title}
             </PageHeading>
-            <p className="mt-6 max-w-[40ch] text-lg text-on-ink-muted md:text-xl">{site.hero.title}</p>
+            <p className="mt-6 max-w-[40ch] text-lg text-on-ink md:text-xl">{site.hero.title}</p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Button size="lg" variant="volt" asChild>
                 <Link to={startHref}>
@@ -157,10 +167,10 @@ export default function HomePage() {
                 <Reveal as="li" index={i} key={lab.id}>
                   <Link
                     to={`/labs/${lab.id}`}
-                    className="flex min-h-16 items-center justify-between gap-4 rounded-panel border border-border bg-background px-5 py-4 transition-colors duration-[120ms] hover:border-primary"
+                    className="card-lift flex min-h-16 items-center justify-between gap-4 rounded-panel border border-border bg-card px-5 py-4 hover:border-foreground"
                   >
                     <span className="flex items-center gap-3">
-                      <FlaskConical aria-hidden="true" strokeWidth={1.75} className="size-5 shrink-0 text-primary" />
+                      <FlaskConical aria-hidden="true" strokeWidth={1.75} className="size-5 shrink-0 text-link" />
                       <span className="font-medium">{lab.title}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-3">
@@ -212,19 +222,21 @@ export default function HomePage() {
         </Container>
       </section>
 
-      <section aria-labelledby="cta-heading" className="relative isolate overflow-hidden border-t border-border bg-primary-soft py-16">
-        <SectionBackdrop variant="grid" />
+      <section aria-labelledby="cta-heading" className="bg-volt py-16 text-ink">
         <Container className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div>
-            <h2 id="cta-heading" className="text-[22px] md:text-[28px]">
+            <h2 id="cta-heading" className="text-[30px] leading-[1.05] md:text-[44px]">
               Ready when you are
             </h2>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-2 max-w-[52ch] text-lg">
               {plural(counts.episodes, 'episode')}, {plural(counts.labs, 'lab')} and a certificate at the end.
             </p>
           </div>
           <Button size="lg" asChild>
-            <Link to={startHref}>{startLabel}</Link>
+            <Link to={startHref}>
+              {startLabel}
+              <ArrowRight aria-hidden="true" strokeWidth={1.75} />
+            </Link>
           </Button>
         </Container>
       </section>

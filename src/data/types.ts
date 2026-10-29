@@ -56,7 +56,7 @@ export interface CourseInfo {
   notice?: string
 }
 
-/** Selects the small original illustration drawn for a part (see src/components/art/PartMotif.tsx). */
+/** Legacy illustration name for a part. Kept so existing data stays valid; the redesign no longer draws motifs. */
 export type PartMotifName = 'console' | 'text' | 'media' | 'shield' | 'code' | 'explore'
 
 /** Colour theme from the video production catalog; selects the part's accent and cover image. */
@@ -70,7 +70,7 @@ export interface Part {
   outcome: string
   /** Optional parts are not needed for the certificate and have no quiz. */
   optional?: boolean
-  /** Illustration for this part; a neutral default is used when omitted. */
+  /** Legacy, not rendered (see PartMotifName). */
   motif?: PartMotifName
   /** Catalog colour theme (accent + cover photo); a neutral default is used when omitted. */
   theme?: PartTheme

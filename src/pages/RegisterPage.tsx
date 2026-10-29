@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { describedBy, ErrorSummary, Field, PasswordInput, type FieldError } from '@/components/AuthForm'
-import { Container } from '@/components/misc'
+import { AuthShell } from '@/components/AuthShell'
 import { PageHeading } from '@/components/PageHeading'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,9 +47,8 @@ export default function RegisterPage() {
     .map((f) => ({ field: f, message: errors[f] ?? '' }))
 
   return (
-    <Container className="py-10 md:py-16">
-      <div className="mx-auto max-w-md">
-        <PageHeading title="Create your account" />
+    <AuthShell>
+        <PageHeading title="Create your account" className="text-[34px] leading-[1.05] font-extrabold md:text-[44px]" />
         <p className="mt-3 text-muted-foreground">
           Demo account: stored only in this browser. Do not reuse a password you use anywhere else.
         </p>
@@ -97,12 +96,11 @@ export default function RegisterPage() {
           Already have an account?{' '}
           <Link
             to={next ? `/login?next=${encodeURIComponent(next)}` : '/login'}
-            className="font-medium text-primary underline underline-offset-4"
+            className="link"
           >
             Log in
           </Link>
         </p>
-      </div>
-    </Container>
+    </AuthShell>
   )
 }

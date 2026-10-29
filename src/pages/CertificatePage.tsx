@@ -1,8 +1,9 @@
 import { Award, CheckCircle2, Circle, Printer } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import { COURSE_COVER } from '@/components/media/partCovers'
 import { Container } from '@/components/misc'
-import { PageHeading } from '@/components/PageHeading'
+import { PageBand } from '@/components/PageBand'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Progress } from '@/components/ui/progress'
@@ -39,26 +40,29 @@ export default function CertificatePage() {
     const requirementsTotal = total + quizCount
     const met = requirementsTotal - unmet.length
     return (
+      <>
+      <PageBand
+        title="Certificate"
+        cover={COURSE_COVER}
+        eyebrow={data.course.title}
+        lede={eligible ? undefined : 'Your certificate unlocks when you complete every required episode and pass every quiz.'}
+      />
       <Container className="py-10 md:py-14">
         <div className="max-w-3xl">
-          <PageHeading title="Certificate" />
           {eligible && issueFailed ? (
-            <Callout tone="error" title="Your certificate could not be saved" className="mt-6">
+            <Callout tone="error" title="Your certificate could not be saved">
               <p>
                 This browser is not saving data, so the certificate cannot be issued. Allow site data for this
                 page, then reload.
               </p>
             </Callout>
           ) : eligible ? (
-            <p className="mt-4 text-muted-foreground" role="status">
+            <p className="text-muted-foreground" role="status">
               Preparing your certificate.
             </p>
           ) : (
             <>
-              <p className="mt-4 max-w-[60ch] text-lg text-muted-foreground">
-                Your certificate unlocks when you complete every required episode and pass every quiz.
-              </p>
-              <div className="mt-8 rounded-panel border border-border bg-card p-5 sm:p-6">
+              <div className="rounded-panel border border-border bg-card p-5 shadow-raised sm:p-6">
                 <p className="font-medium">
                   {met} of {requirementsTotal} requirements met
                 </p>
@@ -74,7 +78,7 @@ export default function CertificatePage() {
                       <li key={to}>
                         <Link
                           to={to}
-                          className="inline-flex min-h-11 items-center gap-2 font-medium text-primary underline-offset-4 hover:underline"
+                          className="link inline-flex min-h-11 items-center gap-2"
                         >
                           <Circle aria-hidden="true" strokeWidth={1.75} className="size-5 text-input" />
                           {label}
@@ -88,43 +92,49 @@ export default function CertificatePage() {
           )}
         </div>
       </Container>
+      </>
     )
   }
 
   return (
-    <Container className="py-10 md:py-14 print:max-w-none print:p-0">
-      <div className="no-print flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <PageHeading title="Your certificate" />
-          <p className="mt-2 flex items-center gap-2 text-muted-foreground">
-            <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="size-5 text-progress" />
+    <>
+      <PageBand
+        title="Your certificate"
+        className="no-print"
+        cover={COURSE_COVER}
+        eyebrow={data.course.title}
+        lede={
+          <span className="flex items-center gap-2">
+            <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="size-5 text-volt" />
             Issued {formatIssueDate(certificate.issuedAt)}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => window.print()}>
+          </span>
+        }
+      >
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button variant="volt" onClick={() => window.print()}>
             <Printer aria-hidden="true" strokeWidth={1.75} />
             Print
           </Button>
-          <Button variant="secondary" asChild>
+          <Button variant="ghostInk" asChild>
             <Link to="/dashboard">Back to dashboard</Link>
           </Button>
         </div>
-      </div>
-
+      </PageBand>
+    <Container className="py-10 md:py-14 print:max-w-none print:p-0">
       <section
         aria-label="Certificate of completion"
         data-testid="certificate"
-        className={`print-only-area mx-auto mt-10 flex aspect-[1.414/1] w-full max-w-4xl flex-col justify-between rounded-panel border-2 border-primary bg-card p-6 text-center shadow-raised sm:p-10 print:mt-0 print:w-[250mm] print:max-w-none print:shadow-none ${justIssued ? 'animate-rise-in' : ''}`}
+        className={`print-only-area relative mx-auto flex aspect-[1.414/1] w-full max-w-4xl flex-col justify-between overflow-hidden rounded-panel border-2 border-primary bg-card p-6 text-center shadow-lift outline outline-1 outline-offset-[-10px] outline-border sm:p-10 print:mt-0 print:w-[250mm] print:max-w-none print:shadow-none ${justIssued ? 'animate-rise-in' : ''}`}
       >
-        <div className="flex items-center justify-center gap-2 font-mono text-sm font-semibold text-primary sm:text-base">
-          <Award aria-hidden="true" strokeWidth={1.75} className="size-5 text-accent" />
+        <span aria-hidden="true" className="certificate-stripe absolute inset-x-0 top-0 h-2 bg-volt" />
+        <div className="flex items-center justify-center gap-2 font-mono text-sm font-semibold text-foreground sm:text-base">
+          <Award aria-hidden="true" strokeWidth={1.75} className="size-5 text-link" />
           AI Workboard (AWS)
         </div>
         <div>
-          <p className="font-mono text-xl font-semibold sm:text-3xl">Certificate of completion</p>
+          <p className="font-display text-2xl font-extrabold tracking-[-0.02em] sm:text-4xl">Certificate of completion</p>
           <p className="mt-2 text-sm text-muted-foreground sm:mt-4 sm:text-base">This certifies that</p>
-          <p className="mt-1 font-mono text-2xl font-semibold break-words text-foreground sm:mt-2 sm:text-4xl">
+          <p className="mt-1 font-display text-2xl font-bold break-words text-foreground sm:mt-2 sm:text-5xl">
             {certificate.name}
           </p>
           <p className="mt-1 text-sm text-muted-foreground sm:mt-3 sm:text-base">has completed the course</p>
@@ -151,5 +161,6 @@ export default function CertificatePage() {
         This is a course completion certificate from AI Workboard. It is not an AWS certification.
       </p>
     </Container>
+    </>
   )
 }

@@ -3,13 +3,14 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { LabStatusLabel } from '@/components/LabStatusLabel'
 import { ProgressRing } from '@/components/art/ProgressRing'
+import { COURSE_COVER, coverFor } from '@/components/media/partCovers'
 import { Container } from '@/components/misc'
-import { PageHeading } from '@/components/PageHeading'
+import { PageBand } from '@/components/PageBand'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { ContinueWatching } from '@/components/video/ContinueWatching'
-import { firstLesson, isOptionalEpisode, episodesInPart, quizForPart } from '@/data'
+import { firstLesson, getPart, isOptionalEpisode, episodesInPart, quizForPart } from '@/data'
 import { useAppState } from '@/context/useAppState'
 import {
   certificateEligibility,
@@ -24,7 +25,7 @@ import {
   visibleCertificate,
   type NextStep,
 } from '@/lib/progress'
-import { formatIssueDate, plural } from '@/lib/utils'
+import { cn, formatIssueDate, plural } from '@/lib/utils'
 import { durationLabel, episodeLabel, spokenDurationLabel, totalDurationLabel, watchRatio, watchState } from '@/lib/watch'
 
 function nextStepText(step: NextStep): { title: string; action: string } {
@@ -57,71 +58,81 @@ export default function DashboardPage() {
   const firstModule = firstLesson(data)
 
   return (
-    <Container className="py-10 md:py-14">
-      <PageHeading title="Dashboard">Welcome back, {user.name}</PageHeading>
-      <p className="mt-3 text-lg text-muted-foreground">{data.course.title}</p>
-
-      {!started && firstModule ? (
-        <div className="mt-8 rounded-panel border border-border bg-card p-6">
-          <h2 className="text-[22px]">You have not started yet</h2>
-          <p className="mt-2 max-w-[60ch] text-muted-foreground">
-            Start with the first lesson. Your progress, lab steps and quiz scores are saved in this browser.
-          </p>
-          <Button className="mt-5" asChild>
-            <Link to={`/learn/${firstModule.id}`}>
-              Start {firstModule.title}
-              <ArrowRight aria-hidden="true" strokeWidth={1.75} />
-            </Link>
-          </Button>
-        </div>
-      ) : (
-        <div className="mt-8 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-panel border border-border bg-card p-6">
-            <h2 className="text-[22px]">Course progress</h2>
-            <div className="mt-3 flex items-center gap-4">
-              <ProgressRing value={done} max={total} label="Required episodes complete" />
-              <p className="font-medium">
-                {done} of {total} required episodes complete
-              </p>
-            </div>
-            {optional.length > 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Optional: {optionalDone} of {plural(optional.length, 'episode')} complete
-              </p>
-            ) : null}
-          </div>
-          <div className="rounded-panel border border-progress bg-primary-soft p-6">
-            <h2 className="text-[22px]">Next step</h2>
-            <p className="mt-3 font-semibold">{stepText.title}</p>
-            <Button className="mt-4" asChild>
-              <Link to={nextStepHref(step)}>
-                {stepText.action}
+    <>
+      <PageBand
+        title="Dashboard"
+        heading={<>Welcome back, {user.name}</>}
+        eyebrow={data.course.title}
+        cover={COURSE_COVER}
+      >
+        {!started && firstModule ? (
+          <div className="mt-8 max-w-2xl rounded-panel border border-border bg-card p-6 shadow-lift">
+            <h2 className="text-[24px]">You have not started yet</h2>
+            <p className="mt-2 max-w-[60ch] text-muted-foreground">
+              Start with the first lesson. Your progress, lab steps and quiz scores are saved in this browser.
+            </p>
+            <Button className="mt-5" asChild>
+              <Link to={`/learn/${firstModule.id}`}>
+                Start {firstModule.title}
                 <ArrowRight aria-hidden="true" strokeWidth={1.75} />
               </Link>
             </Button>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="mt-8 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+            <div className="rounded-panel border border-border bg-card p-6 shadow-lift">
+              <h2 className="text-[24px]">Course progress</h2>
+              <div className="mt-4 flex items-center gap-5">
+                <ProgressRing value={done} max={total} label="Required episodes complete" className="size-24" />
+                <div>
+                  <p className="font-medium">
+                    {done} of {total} required episodes complete
+                  </p>
+                  {optional.length > 0 ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Optional: {optionalDone} of {plural(optional.length, 'episode')} complete
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            <div className="relative overflow-hidden rounded-panel border border-volt/50 bg-card p-6 shadow-lift">
+              <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-volt" />
+              <h2 className="text-[24px]">Next step</h2>
+              <p className="mt-3 font-semibold">{stepText.title}</p>
+              <Button className="mt-4" asChild>
+                <Link to={nextStepHref(step)}>
+                  {stepText.action}
+                  <ArrowRight aria-hidden="true" strokeWidth={1.75} />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </PageBand>
 
-      {started ? <ContinueWatching className="mt-4 max-w-xl" /> : null}
+    <Container className="py-10 md:py-14">
+      {started ? <ContinueWatching className="mb-10 max-w-xl" /> : null}
 
-      <section aria-labelledby="episodes-heading" className="mt-10">
-        <h2 id="episodes-heading" className="text-[22px] md:text-[28px]">
+      <section aria-labelledby="episodes-heading">
+        <h2 id="episodes-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
           Episodes
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {plural(data.episodes.length, 'episode')}, {totalDurationLabel(data.episodes)} in total
         </p>
-        <ol className="mt-4 grid gap-2 sm:grid-cols-2">
+        <ol className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {data.episodes.map((e) => {
+            const accent = coverFor(getPart(data, e.partId)).accent
             const state = watchState(progress, e)
             const pct = Math.round(watchRatio(progress, e) * 100)
             return (
-              <li key={e.id}>
+              <li key={e.id} className="min-w-0">
                 <Link
                   to={`/learn/${e.id}`}
-                  className="flex min-h-14 items-center gap-3 rounded-panel border border-border bg-card px-4 py-2 transition-colors duration-[120ms] hover:border-primary"
+                  className="relative flex min-h-14 items-center gap-3 overflow-hidden rounded-panel border border-border bg-card py-2 pr-4 pl-5 shadow-raised transition-colors duration-[120ms] hover:border-foreground"
                 >
+                  <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', accent)} />
                   {state === 'watched' ? (
                     <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="size-5 shrink-0 text-progress" />
                   ) : state === 'partly' ? (
@@ -136,7 +147,7 @@ export default function DashboardPage() {
                       {state === 'watched' ? 'Watched' : state === 'partly' ? `${pct}% watched` : 'Not started'}
                     </span>
                   </span>
-                  <span className="shrink-0 text-sm text-muted-foreground">
+                  <span className="shrink-0 font-mono text-sm text-muted-foreground">
                     <span aria-hidden="true">{durationLabel(e.durationSec, e.durationApprox)}</span>
                     <span className="sr-only">{spokenDurationLabel(e.durationSec, e.durationApprox)}</span>
                   </span>
@@ -149,7 +160,7 @@ export default function DashboardPage() {
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
         <section aria-labelledby="parts-heading">
-          <h2 id="parts-heading" className="text-[22px] md:text-[28px]">
+          <h2 id="parts-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
             Parts
           </h2>
           <ul className="mt-4 flex flex-col gap-3">
@@ -158,13 +169,27 @@ export default function DashboardPage() {
               const partDone = mods.filter((m) => isEpisodeComplete(progress, m.id)).length
               const quiz = quizForPart(data, part.id)
               const quizPassed = quiz ? (progress.quizzes[quiz.id]?.passed ?? false) : false
+              const cover = coverFor(part)
               return (
-                <li key={part.id} className="rounded-panel border border-border bg-card p-4">
+                <li key={part.id} className="flex gap-4 rounded-panel border border-border bg-card p-4 shadow-raised">
+                  <span
+                    aria-hidden="true"
+                    className="relative hidden aspect-square w-16 shrink-0 overflow-hidden rounded-control sm:block"
+                  >
+                    <img
+                      src={cover.src}
+                      srcSet={cover.srcSet}
+                      sizes="64px"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="size-full object-cover"
+                    />
+                    <span className={cn('absolute inset-x-0 bottom-0 h-1', cover.accent)} />
+                  </span>
+                  <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-x-2">
-                    <Link
-                      to={`/course#part-${part.id}`}
-                      className="inline-flex min-h-11 items-center font-semibold hover:text-primary"
-                    >
+                    <Link to={`/course#part-${part.id}`} className="link inline-flex min-h-11 items-center">
                       {part.title}
                       {part.optional ? ' (optional)' : ''}
                     </Link>
@@ -183,6 +208,7 @@ export default function DashboardPage() {
                       {quiz.title}: {quizPassed ? 'passed' : 'not passed yet'}
                     </p>
                   ) : null}
+                  </div>
                 </li>
               )
             })}
@@ -190,10 +216,10 @@ export default function DashboardPage() {
         </section>
 
         <section aria-labelledby="quiz-heading">
-          <h2 id="quiz-heading" className="text-[22px] md:text-[28px]">
+          <h2 id="quiz-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
             Quiz scores
           </h2>
-          <div role="region" aria-labelledby="quiz-heading" tabIndex={0} className="mt-4 overflow-x-auto rounded-panel border border-border bg-card">
+          <div role="region" aria-labelledby="quiz-heading" tabIndex={0} className="mt-4 overflow-x-auto rounded-panel border border-border bg-card shadow-raised">
             <table className="w-full min-w-[22rem] text-left">
               <thead>
                 <tr className="bg-muted text-sm">
@@ -217,7 +243,7 @@ export default function DashboardPage() {
                       <td className="px-4 py-2">
                         <Link
                           to={`/quiz/${quiz.id}`}
-                          className="inline-flex min-h-11 items-center font-medium text-primary underline-offset-4 hover:underline"
+                          className="link inline-flex min-h-11 items-center"
                         >
                           {quiz.title}
                         </Link>
@@ -252,7 +278,7 @@ export default function DashboardPage() {
       </div>
 
       <section aria-labelledby="labs-heading" className="mt-10">
-        <h2 id="labs-heading" className="text-[22px] md:text-[28px]">
+        <h2 id="labs-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
           Labs
         </h2>
         {data.labs.length === 0 ? (
@@ -263,7 +289,7 @@ export default function DashboardPage() {
               <li key={lab.id}>
                 <Link
                   to={`/labs/${lab.id}`}
-                  className="flex h-full flex-col gap-2 rounded-panel border border-border bg-card p-4 transition-colors duration-[120ms] hover:border-primary"
+                  className="card-lift flex h-full flex-col gap-2 rounded-panel border border-border bg-card p-4 hover:border-foreground"
                 >
                   <span className="font-semibold">{lab.title}</span>
                   <LabStatusLabel
@@ -279,15 +305,15 @@ export default function DashboardPage() {
       </section>
 
       <section aria-labelledby="cert-heading" className="mt-10">
-        <h2 id="cert-heading" className="text-[22px] md:text-[28px]">
+        <h2 id="cert-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
           Certificate
         </h2>
-        <div className="mt-4 flex flex-col gap-4 rounded-panel border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="ink-scope on-ink mt-4 flex flex-col gap-4 rounded-panel bg-ink p-6 shadow-lift sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <Award
               aria-hidden="true"
               strokeWidth={1.75}
-              className={certificate || unmet.length === 0 ? 'size-6 text-accent' : 'size-6 text-muted-foreground'}
+              className={certificate || unmet.length === 0 ? 'size-6 text-volt' : 'size-6 text-muted-foreground'}
             />
             <div>
               <p className="font-semibold">
@@ -330,5 +356,6 @@ export default function DashboardPage() {
         </div>
       ) : null}
     </Container>
+    </>
   )
 }

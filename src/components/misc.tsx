@@ -2,7 +2,8 @@ import { Clapperboard } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
 import { useAppState } from '@/context/useAppState'
-import { PageHeading } from './PageHeading'
+import { COURSE_COVER } from './media/partCovers'
+import { PageBand } from './PageBand'
 import { Button } from './ui/button'
 import { Callout } from './ui/callout'
 import { Skeleton } from './ui/skeleton'
@@ -11,12 +12,26 @@ export function Container({ children, className = '' }: { children: ReactNode; c
   return <div className={`mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>
 }
 
-export function VideoPlaceholder({ title }: { title: string }) {
+export function VideoPlaceholder({ title, cover }: { title: string; cover?: { src: string; srcSet?: string } }) {
   return (
-    <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-panel bg-code p-6 text-center text-code-foreground">
-      <Clapperboard aria-hidden="true" strokeWidth={1.75} className="size-10 text-code-highlight" />
-      <p className="font-mono text-lg font-semibold">Video coming soon</p>
-      <p className="max-w-md text-sm text-code-muted">The lesson video for "{title}" is in production.</p>
+    <div className="relative isolate flex aspect-video w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-panel border border-ink-line bg-ink p-6 text-center text-on-ink shadow-lift">
+      {cover ? (
+        <img
+          src={cover.src}
+          srcSet={cover.srcSet}
+          sizes="(min-width: 1024px) 64rem, 100vw"
+          alt=""
+          decoding="async"
+          className="absolute inset-0 -z-20 size-full object-cover"
+        />
+      ) : null}
+      {/* Scrim: 0.86 ink keeps the muted line at or above 4.5:1 over any cover pixel. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ink/86" />
+      <span className="flex size-14 items-center justify-center rounded-full border border-volt/60">
+        <Clapperboard aria-hidden="true" strokeWidth={1.75} className="size-7 text-volt" />
+      </span>
+      <p className="font-display text-xl font-bold md:text-2xl">Video coming soon</p>
+      <p className="max-w-md text-sm text-on-ink-muted">The lesson video for "{title}" is in production.</p>
     </div>
   )
 }
@@ -59,20 +74,23 @@ export function GuestOnly({ children }: { children: ReactNode }) {
 
 export function NotFound() {
   return (
-    <Container className="py-16 md:py-24">
-      <PageHeading title="Page not found" />
-      <p className="mt-4 max-w-[60ch] text-muted-foreground">
-        The page you asked for does not exist. It may have moved, or the link may be wrong.
-      </p>
+    <PageBand
+      title="Page not found"
+      size="lg"
+      cover={COURSE_COVER}
+      eyebrow="Error 404"
+      className="flex min-h-[60dvh] items-center"
+      lede="The page you asked for does not exist. It may have moved, or the link may be wrong."
+    >
       <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild>
+        <Button variant="volt" size="lg" asChild>
           <Link to="/">Go to home</Link>
         </Button>
-        <Button variant="secondary" asChild>
+        <Button variant="ghostInk" size="lg" asChild>
           <Link to="/course">View the course</Link>
         </Button>
       </div>
-    </Container>
+    </PageBand>
   )
 }
 

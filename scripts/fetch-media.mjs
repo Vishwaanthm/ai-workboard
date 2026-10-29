@@ -2,6 +2,7 @@
  * Build-prep: downloads the stock media listed below from the Pixabay API and encodes it into
  * public/media/. Needs PIXABAY_API_KEY in the environment (never commit the key) and ffmpeg on PATH.
  * Run: node scripts/fetch-media.mjs   (the encoded files are committed; this only reruns the prep)
+ * If Node cannot reach the API host on this network, fetch the same ids with curl or Python instead.
  * Licence: Pixabay Content License (https://pixabay.com/service/license-summary/). See CREDITS.md.
  */
 import { execFileSync } from 'node:child_process'
@@ -21,7 +22,7 @@ const UA = { 'User-Agent': 'ai-workboard-media-prep/1.0' }
 async function get(url) {
   for (let attempt = 1; ; attempt++) {
     try {
-      return await get(url)
+      return await fetch(url, { headers: UA })
     } catch (err) {
       if (attempt >= 4) throw err
       await new Promise((r) => setTimeout(r, 1500 * attempt))
@@ -36,7 +37,7 @@ export const MEDIA = [
   { kind: 'image', id: 2750627, name: 'part-midnight' },
   { kind: 'image', id: 5189430, name: 'part-sunrise' },
   { kind: 'image', id: 8317167, name: 'part-slate' },
-  { kind: 'image', id: 547363, name: 'part-forest' },
+  { kind: 'image', id: 8118380, name: 'part-forest' },
 ]
 
 async function api(kind, id) {
@@ -65,7 +66,7 @@ for (const m of MEDIA) {
     // 1280x720 H.264, no audio, 18 s loop, faststart; poster from the first frame.
     ff(['-i', raw, '-t', '18', '-an', '-vf', 'scale=1280:-2,fps=24', '-c:v', 'libx264', '-preset', 'slow', '-crf', '30',
       '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(OUT, `${m.name}.mp4`)])
-    ff(['-i', raw, '-t', '18', '-an', '-vf', 'scale=1280:-2,fps=24', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '42',
+    ff(['-i', raw, '-t', '18', '-an', '-vf', 'scale=1280:-2,fps=24', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '47',
       '-row-mt', '1', join(OUT, `${m.name}.webm`)])
     ff(['-ss', '2', '-i', raw, '-frames:v', '1', '-vf', 'scale=1600:-2', '-c:v', 'libwebp', '-quality', '72',
       join(OUT, `${m.name}-poster.webp`)])

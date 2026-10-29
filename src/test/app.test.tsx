@@ -14,11 +14,12 @@ import {
 } from './helpers'
 
 const heading = (name: string | RegExp) => screen.findByRole('heading', { level: 1, name })
+const title = (id: number) => courseData.episodes.find((e) => e.id === id)!.title
 
 describe('routing', () => {
   it('renders every public route', async () => {
     renderApp('/')
-    expect(await heading(/Learn Amazon Bedrock/)).toBeInTheDocument()
+    expect(await heading(courseData.course.title)).toBeInTheDocument()
   })
 
   it.each([
@@ -100,26 +101,28 @@ describe('routing', () => {
 describe('counts come from the data', () => {
   it('updates the course page when the data changes', async () => {
     const data = cloneData()
-    data.parts.push({ id: 7, title: 'Extra part', outcome: 'Extra outcome.' })
-    data.episodes.push({ id: 13, number: 13, durationSec: 300, videos: {}, captions: {}, partId: 7, title: 'Extra episode', summary: 'Extra.' })
-    data.quizzes.push({ ...data.quizzes[0]!, id: 'part-7', partId: 7, title: 'Part 7 quiz' })
+    data.parts.push({ id: 6, title: 'Extra part', outcome: 'Extra outcome.' })
+    data.episodes.push({ id: 13, number: 13, durationSec: 300, videos: {}, captions: {}, partId: 6, title: 'Extra episode', summary: 'Extra.' })
+    data.quizzes.push({ ...data.quizzes[0]!, id: 'part-6', partId: 6, title: 'Part 6 quiz' })
     renderApp('/course', data)
     await heading(data.course.title)
     const details = screen.getByRole('list', { name: 'Course details' })
-    expect(within(details).getByText('7 parts')).toBeInTheDocument()
+    expect(within(details).getByText('6 parts')).toBeInTheDocument()
     expect(within(details).getByText('13 episodes')).toBeInTheDocument()
-    expect(within(details).getByText('97:00 of video')).toBeInTheDocument()
+    // 5447 s + 300 s, shown as approximate while catalog lengths are in use.
+    expect(within(details).getByText('≈ 96 min of video')).toBeInTheDocument()
     expect(screen.getAllByText('3 part quizzes and a final assessment').length).toBeGreaterThan(0)
   })
 
   it('updates dashboard totals when the data changes', async () => {
     const data = cloneData()
     data.episodes.push({ id: 13, number: 13, durationSec: 300, videos: {}, captions: {}, partId: 1, title: 'Extra episode', summary: 'Extra.' })
+    data.episodes.push({ id: 14, number: 14, durationSec: 300, videos: {}, captions: {}, partId: 5, title: 'Bonus episode', summary: 'Extra.', optional: true })
     seedLearner({ completedEpisodes: [1] })
     renderApp('/dashboard', data)
     await heading(`Welcome back, ${LEARNER.name}`)
-    // Shipped data has 11 required episodes (episode 12 is optional); the extra required episode makes it 12.
-    expect(screen.getByText('1 of 12 required episodes complete')).toBeInTheDocument()
+    // Shipped data has 12 required episodes; the extra required one makes 13, the optional one is counted apart.
+    expect(screen.getByText('1 of 13 required episodes complete')).toBeInTheDocument()
     expect(screen.getByText('Optional: 0 of 1 episode complete')).toBeInTheDocument()
   })
 })
@@ -129,24 +132,37 @@ describe('lessons', () => {
     const user = userEvent.setup()
     seedLearner()
     const first = renderApp('/learn/1')
-    await heading('Episode 1 title')
+    await heading(title(1))
     await user.click(screen.getByRole('button', { name: 'Mark complete' }))
     expect(readProgress().completedEpisodes).toEqual([1])
     first.unmount()
     renderApp('/learn/1')
-    await heading('Episode 1 title')
+    await heading(title(1))
     expect(screen.getByRole('button', { name: 'Completed (undo)' })).toBeInTheDocument()
   })
 
-  it('links the last episode of a part to its quiz, but not in the optional part', async () => {
+  it('links the last episode of a part to its quiz, but not in a part without a quiz', async () => {
     seedLearner()
     const a = renderApp('/learn/2')
-    await heading('Episode 2 title')
+    await heading(title(2))
     expect(screen.getByRole('link', { name: /Take the Part 1 quiz/ })).toHaveAttribute('href', '/quiz/part-1')
     a.unmount()
+    // Part 5 (Building) has no quiz yet.
     renderApp('/learn/12')
-    await heading('Episode 12 title')
+    await heading(title(12))
     expect(screen.queryByText(/Take the/)).not.toBeInTheDocument()
+  })
+
+  it('shows the catalog length as approximate until the real video length is known', async () => {
+    seedLearner()
+    const a = renderApp('/learn/3')
+    await heading(title(3))
+    expect(screen.getAllByText('≈ 8 min').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('about 8 minutes').length).toBeGreaterThan(0)
+    a.unmount()
+    renderApp('/learn/1')
+    await heading(title(1))
+    expect(screen.getAllByText('7:21').length).toBeGreaterThan(0)
   })
 })
 
@@ -239,7 +255,7 @@ describe('certificate', () => {
     seedLearner({ completedEpisodes: [1] })
     renderApp('/certificate')
     await heading('Certificate')
-    expect(screen.getByRole('link', { name: 'Complete Episode 2 title' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: `Complete ${title(2)}` })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Pass the Final assessment' })).toBeInTheDocument()
   })
 
@@ -297,6 +313,6 @@ describe('dashboard', () => {
     act(() => {
       window.dispatchEvent(new StorageEvent('storage', { key: `awb:v1:progress:${LEARNER.email}` }))
     })
-    expect(await screen.findByText('1 of 11 required episodes complete')).toBeInTheDocument()
+    expect(await screen.findByText('1 of 12 required episodes complete')).toBeInTheDocument()
   })
 })

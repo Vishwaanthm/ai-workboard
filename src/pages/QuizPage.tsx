@@ -1,8 +1,9 @@
 import { ArrowRight, CheckCircle2, Lock, RotateCcw, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
+import { COURSE_COVER, coverFor } from '@/components/media/partCovers'
 import { Container, NotFound } from '@/components/misc'
-import { PageHeading } from '@/components/PageHeading'
+import { PageBand } from '@/components/PageBand'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { finalQuiz, getEpisode, getPart, getQuiz } from '@/data'
@@ -50,7 +51,7 @@ function QuizForm({ quiz }: { quiz: Quiz }) {
 
   return (
     <>
-      <ul aria-label="Quiz details" className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+      <ul aria-label="Quiz details" className="flex flex-wrap gap-x-6 gap-y-1 font-mono text-sm text-muted-foreground">
         <li>{total} questions</li>
         <li>Pass mark {percent(passMark)}</li>
         <li>{record ? `Best score ${record.best} of ${total}` : 'Not taken yet'}</li>
@@ -109,12 +110,12 @@ function QuizForm({ quiz }: { quiz: Quiz }) {
           const isRight = chosen === q.answerIndex
           const linked = q.episodeId !== undefined ? getEpisode(data, q.episodeId) : undefined
           return (
-            <fieldset key={q.id} className="rounded-panel border border-border bg-card p-5 sm:p-6">
+            <fieldset key={q.id} className="rounded-panel border border-border bg-card p-5 shadow-raised sm:p-6">
               <legend className="w-full">
-                <span className="block text-sm font-medium text-muted-foreground">
+                <span className="block font-mono text-sm font-semibold text-muted-foreground">
                   Question {qi + 1} of {total}
                 </span>
-                <span className="mt-1 block text-lg font-semibold">{q.prompt}</span>
+                <span className="mt-1 block font-display text-xl font-bold">{q.prompt}</span>
               </legend>
               <div className="mt-4 flex flex-col gap-2">
                 {q.options.map((option, oi) => {
@@ -171,7 +172,7 @@ function QuizForm({ quiz }: { quiz: Quiz }) {
                   {linked ? (
                     <Link
                       to={`/learn/${linked.id}`}
-                      className="mt-2 inline-flex min-h-11 items-center font-medium text-primary underline underline-offset-4"
+                      className="link mt-2 inline-flex min-h-11 items-center"
                     >
                       Review {linked.title}
                     </Link>
@@ -209,22 +210,29 @@ export default function QuizPage() {
   const unlocked = isQuizUnlocked(progress, data, quiz)
   const blocking = quizzesBlockingFinal(progress, data)
 
+  const cover = part ? coverFor(part) : undefined
+
   return (
+    <>
+      <PageBand
+        title={quiz.title}
+        cover={cover ?? COURSE_COVER}
+        accent={cover?.accent}
+        eyebrow={part ? `Part ${part.id}: ${part.title}` : 'Final assessment'}
+      />
     <Container className="py-10 md:py-14">
       <div className="max-w-3xl">
-        <p className="text-muted-foreground">{part ? part.title : 'Final assessment'}</p>
-        <PageHeading title={quiz.title} className="mt-1" />
         {unlocked ? (
           <QuizForm key={quiz.id} quiz={quiz} />
         ) : (
-          <Callout tone="info" title="Locked until you pass every part quiz" className="mt-8">
+          <Callout tone="info" title="Locked until you pass every part quiz">
             <p>Pass these first:</p>
             <ul className="mt-2 flex flex-col">
               {blocking.map((q) => (
                 <li key={q.id}>
                   <Link
                     to={`/quiz/${q.id}`}
-                    className="inline-flex min-h-11 items-center gap-2 font-medium text-primary underline underline-offset-4"
+                    className="link inline-flex min-h-11 items-center gap-2"
                   >
                     <Lock aria-hidden="true" strokeWidth={1.75} className="size-4" />
                     {q.title}
@@ -236,5 +244,6 @@ export default function QuizPage() {
         )}
       </div>
     </Container>
+    </>
   )
 }
