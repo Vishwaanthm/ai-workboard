@@ -1,8 +1,10 @@
 /**
- * Content types for the course data files (course.ts, labs.ts, quizzes.ts, site.ts).
+ * Content types for the course data files (course.ts, labs.ts, quizzes.ts, site.ts, home.ts).
  * Components read only these shapes, so real content can replace the placeholders
  * without any component changes. Rules that tie the files together (ids, references,
- * one quiz per non-optional part, one final) are checked by src/data/validate.ts.
+ * at most one quiz per episode, one final) are checked by src/data/validate.ts.
+ *
+ * The course is flat: a list of video episodes, each split into chapters (no parts).
  */
 
 /** One block of lesson notes. Blocks render in array order. */
@@ -22,6 +24,8 @@ export type AwsIconName =
   | 's3'
   | 'cloudwatch'
   | 'iam'
+  | 'kms'
+  | 'apiGateway'
   | 'cli'
   | 'cloudshell'
   | 'lambdaFunction'
@@ -56,33 +60,28 @@ export interface CourseInfo {
   notice?: string
 }
 
-/** Legacy illustration name for a part. Kept so existing data stays valid; the redesign no longer draws motifs. */
-export type PartMotifName = 'console' | 'text' | 'media' | 'shield' | 'code' | 'explore'
+/**
+ * Colour theme from the video production catalog; selects the episode's accent (decorative only, the
+ * episode code and title are always written next to it).
+ */
+export type EpisodeTheme = 'glass' | 'midnight' | 'sunrise' | 'slate' | 'forest'
 
-/** Colour theme from the video production catalog; selects the part's accent and cover image. */
-export type PartTheme = 'ocean' | 'midnight' | 'sunrise' | 'slate' | 'forest' | 'aurora'
-
-export interface Part {
-  /** Unique positive integer. Used in anchors (#part-<id>). */
-  id: number
-  title: string
-  /** "You will be able to..." sentence, shown under "What you'll learn". */
-  outcome: string
-  /** Optional parts are not needed for the certificate and have no quiz. */
-  optional?: boolean
-  /** Legacy, not rendered (see PartMotifName). */
-  motif?: PartMotifName
-  /** Catalog colour theme (accent + cover photo); a neutral default is used when omitted. */
-  theme?: PartTheme
-}
+/** Cover photos in public/media/ (see src/components/media/covers.ts and CREDITS.md). */
+export type CoverName = 'entrance' | 'typing' | 'plated' | 'lock' | 'code'
 
 /** Video languages the course is produced in. */
 export type Lang = 'en' | 'es' | 'hi' | 'ta'
 
 export interface Chapter {
-  /** Start time in seconds. */
-  t: number
+  /** Start time in seconds. Leave out until the video exists: the chapter is then listed without a seek time. */
+  t?: number
   label: string
+}
+
+/** The question an episode ends with, shown as a "Check yourself" card with a reveal button. */
+export interface EpisodeCheck {
+  question: string
+  answer: string
 }
 
 export interface Resource {
@@ -98,11 +97,19 @@ export interface Episode {
   id: number
   /** Episode number shown as E01, E02, ... */
   number: number
-  /** Must match a Part id. */
-  partId: number
   title: string
-  /** One line shown in the curriculum. */
+  /** The catalog's "Covers" line, shown in the curriculum and under the title. */
   summary: string
+  /** The catalog's "Learner can" list, one short phrase per item. */
+  outcomes: string[]
+  /** The catalog's "Ends with" question and its answer. */
+  check?: EpisodeCheck
+  /** Catalog colour theme (accent bar); a neutral default is used when omitted. */
+  theme?: EpisodeTheme
+  /** Cover photo for cards and the lesson stage; a default is used when omitted. */
+  cover?: CoverName
+  /** AWS services the episode touches, shown as official icons with their names. */
+  services?: AwsIconName[]
   /** Running time in seconds (used for totals before the video file loads). */
   durationSec: number
   /** True while durationSec is the catalog target, not a measured length: shown as "≈ 8 min". */
@@ -120,7 +127,7 @@ export interface Episode {
   notes?: NoteBlock[]
   /** Must match a Lab id when the episode has a lab. */
   labId?: string
-  /** Quiz id to offer after this episode (defaults to the part quiz on the part's last episode). */
+  /** Quiz id to offer after this episode (defaults to the quiz whose episodeId is this episode). */
   quizAfter?: string
   /** Optional episodes are not needed for the certificate. */
   optional?: boolean
@@ -179,8 +186,8 @@ export interface QuizQuestion {
 export interface Quiz {
   /** URL slug: /quiz/<id>. Stored in progress, so keep ids stable once published. */
   id: string
-  /** A non-optional Part id, or 'final' for the final assessment (exactly one). */
-  partId: number | 'final'
+  /** The Episode id this quiz checks, or 'final' for the final assessment (at most one). */
+  episodeId: number | 'final'
   title: string
   /** Fraction of correct answers needed to pass, 0 < passMark <= 1. Default 0.8. */
   passMark?: number
@@ -195,7 +202,6 @@ export interface SiteCopy {
 
 export interface CourseData {
   course: CourseInfo
-  parts: Part[]
   episodes: Episode[]
   labs: Lab[]
   quizzes: Quiz[]
@@ -219,27 +225,45 @@ export interface Announcement {
   link?: HomeLink
 }
 
-/** The code or console panel shown in a part's "Explore by part" tab. */
-export interface PartSnippet {
-  /** Must match a Part id. */
-  partId: number
+/** The code or console panel shown in an episode's "Explore by episode" tab. */
+export interface EpisodeSnippet {
+  /** Must match an Episode id. */
+  episodeId: number
   /** File name or caption above the code; also the copy button's accessible name. */
   label: string
   lang: CodeLang
   code: string
 }
 
-/** One "What you'll build" card. */
-export interface UseCase {
-  id: string
-  /** Must match a Part id: sets the card's accent and its "Part N" label. */
-  partId: number
-  title: string
+/** One step of the running story (the catalog's recurring character), tied to an episode. */
+export interface JourneyStep {
+  /** Must match an Episode id: sets the step's accent, "E0N" label and link. */
+  episodeId: number
   text: string
-  /** Optional official AWS icon shown with its service name. */
+}
+
+/** Lucide icon used for an analogy row (see src/components/home/Analogy.tsx). */
+export type AnalogyIcon = 'door' | 'menu' | 'chef' | 'dish' | 'manager' | 'kitchen'
+
+/** One row of the course's running analogy. `meaning` is left out where the catalog gives none. */
+export interface AnalogyItem {
+  id: string
+  icon: AnalogyIcon
+  title: string
+  meaning?: string
+}
+
+/** Simple Icons brand marks shipped in public/brand-marks/ (CC0 files, trademarks of their owners). */
+export type ProviderMark = 'anthropic' | 'meta' | 'mistral' | 'deepseek'
+
+/** A model provider chip; `models` lists the model names the catalog gives for it. */
+export interface ModelProvider {
+  name: string
+  models?: string[]
+  /** Monochrome brand mark next to the name; text only when omitted. */
+  mark?: ProviderMark
+  /** Official AWS service icon instead of a brand mark (Amazon models). */
   service?: AwsIconName
-  /** Card link; defaults to the part on the Course page. */
-  href?: string
 }
 
 /** A "What's new" card in the learning hub. Without `href` the card is not a link. */
@@ -269,10 +293,13 @@ export interface HomeSections {
   announcement: Announcement | null
   /** One-line descriptions under the header Learn menu links (routes are fixed in the header). */
   learnMenu: { labs: string; dashboard: string; certificate: string }
-  explore: { lede: string; snippets: PartSnippet[] }
-  /** Provider names shown as text chips (no logos). */
-  models: { lede: string; providers: string[] }
-  useCases: { lede: string; items: UseCase[] }
+  explore: { lede: string; snippets: EpisodeSnippet[] }
+  /** Provider chips in the model strip. */
+  models: { lede: string; providers: ModelProvider[] }
+  /** The running analogy section; `quote` is the catalog sentence, shown whole. */
+  analogy: { title: string; quote: string; items: AnalogyItem[] }
+  /** The recurring character's project, one step per episode. */
+  journey: { title: string; lede: string; steps: JourneyStep[] }
   hub: { lede: string; cta: HomeLink; posts: HubPost[]; events: HubEvent[] }
   /** Copyable command in the closing call to action; null hides it. */
   closingCommand: { label: string; code: string } | null

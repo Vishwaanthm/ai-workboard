@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 import { describe, expect, it, vi } from 'vitest'
 import { courseData } from '@/data'
+import type { Episode } from '@/data/types'
 import {
   certificateFor,
   cloneData,
@@ -15,6 +16,17 @@ import {
 
 const heading = (name: string | RegExp) => screen.findByRole('heading', { level: 1, name })
 const title = (id: number) => courseData.episodes.find((e) => e.id === id)!.title
+/** A minimal valid episode for tests that grow the course. */
+const extraEpisode = (id: number): Episode => ({
+  id,
+  number: id,
+  title: `Extra episode ${id}`,
+  summary: 'Extra.',
+  outcomes: ['Extra outcome'],
+  durationSec: 300,
+  videos: {},
+  captions: {},
+})
 
 describe('routing', () => {
   it('renders every public route', async () => {
@@ -101,28 +113,27 @@ describe('routing', () => {
 describe('counts come from the data', () => {
   it('updates the course page when the data changes', async () => {
     const data = cloneData()
-    data.parts.push({ id: 6, title: 'Extra part', outcome: 'Extra outcome.' })
-    data.episodes.push({ id: 13, number: 13, durationSec: 300, videos: {}, captions: {}, partId: 6, title: 'Extra episode', summary: 'Extra.' })
-    data.quizzes.push({ ...data.quizzes[0]!, id: 'part-6', partId: 6, title: 'Part 6 quiz' })
+    data.episodes.push(extraEpisode(6))
+    data.quizzes.push({ ...data.quizzes[0]!, id: 'episode-6', episodeId: 6, title: 'E06 quiz' })
     renderApp('/course', data)
     await heading(data.course.title)
     const details = screen.getByRole('list', { name: 'Course details' })
-    expect(within(details).getByText('6 parts')).toBeInTheDocument()
-    expect(within(details).getByText('13 episodes')).toBeInTheDocument()
-    // 5447 s + 300 s, shown as approximate while catalog lengths are in use.
-    expect(within(details).getByText('≈ 96 min of video')).toBeInTheDocument()
-    expect(screen.getAllByText('3 part quizzes and a final assessment').length).toBeGreaterThan(0)
+    expect(within(details).getByText('6 videos')).toBeInTheDocument()
+    // 6016 s (E01 measured 16:16 plus four catalog targets) + 300 s, approximate while targets are in use.
+    expect(within(details).getByText('≈ 105 min in total')).toBeInTheDocument()
+    expect(within(details).getByText('20 chapters')).toBeInTheDocument()
+    expect(screen.getAllByText('6 episode quizzes and a final assessment').length).toBeGreaterThan(0)
   })
 
   it('updates dashboard totals when the data changes', async () => {
     const data = cloneData()
-    data.episodes.push({ id: 13, number: 13, durationSec: 300, videos: {}, captions: {}, partId: 1, title: 'Extra episode', summary: 'Extra.' })
-    data.episodes.push({ id: 14, number: 14, durationSec: 300, videos: {}, captions: {}, partId: 5, title: 'Bonus episode', summary: 'Extra.', optional: true })
+    data.episodes.push(extraEpisode(6))
+    data.episodes.push({ ...extraEpisode(7), title: 'Bonus episode', optional: true })
     seedLearner({ completedEpisodes: [1] })
     renderApp('/dashboard', data)
     await heading(`Welcome back, ${LEARNER.name}`)
-    // Shipped data has 12 required episodes; the extra required one makes 13, the optional one is counted apart.
-    expect(screen.getByText('1 of 13 required episodes complete')).toBeInTheDocument()
+    // Shipped data has 5 required episodes; the extra required one makes 6, the optional one is counted apart.
+    expect(screen.getByText('1 of 6 required episodes complete')).toBeInTheDocument()
     expect(screen.getByText('Optional: 0 of 1 episode complete')).toBeInTheDocument()
   })
 })
@@ -141,28 +152,67 @@ describe('lessons', () => {
     expect(screen.getByRole('button', { name: 'Completed (undo)' })).toBeInTheDocument()
   })
 
-  it('links the last episode of a part to its quiz, but not in a part without a quiz', async () => {
+  it('links each episode to its quiz, but not an episode without one', async () => {
     seedLearner()
     const a = renderApp('/learn/2')
     await heading(title(2))
-    expect(screen.getByRole('link', { name: /Take the Part 1 quiz/ })).toHaveAttribute('href', '/quiz/part-1')
+    expect(screen.getByRole('link', { name: /Take the E02 quiz/ })).toHaveAttribute('href', '/quiz/episode-2')
     a.unmount()
-    // Part 5 (Building) has no quiz yet.
-    renderApp('/learn/12')
-    await heading(title(12))
+    const data = cloneData()
+    data.quizzes = data.quizzes.filter((q) => q.episodeId !== 5)
+    renderApp('/learn/5', data)
+    await heading(title(5))
     expect(screen.queryByText(/Take the/)).not.toBeInTheDocument()
+  })
+
+  it('reveals the check-yourself answer on request and hides it again', async () => {
+    const user = userEvent.setup()
+    seedLearner()
+    renderApp('/learn/1')
+    await heading(title(1))
+    const check = courseData.episodes[0]!.check!
+    const card = screen.getByRole('region', { name: 'Check yourself' })
+    expect(within(card).getByText(check.question)).toBeVisible()
+    const button = within(card).getByRole('button', { name: 'Reveal answer' })
+    expect(button).toHaveAttribute('aria-expanded', 'false')
+    const answer = document.getElementById(button.getAttribute('aria-controls')!)!
+    expect(answer).not.toBeVisible()
+    // No invented options: the card has one button and no radio choices.
+    expect(within(card).queryAllByRole('radio')).toHaveLength(0)
+    await user.click(button)
+    expect(button).toHaveAttribute('aria-expanded', 'true')
+    expect(button).toHaveAccessibleName('Hide answer')
+    expect(answer).toBeVisible()
+    expect(answer).toHaveTextContent(`Answer: ${check.answer}`)
+    await user.click(button)
+    expect(answer).not.toBeVisible()
+  })
+
+  it('lists chapters without seek times while the catalog gives none', async () => {
+    seedLearner()
+    renderApp('/learn/1')
+    await heading(title(1))
+    const guide = screen.getByRole('region', { name: 'In this episode' })
+    for (const label of ['What Bedrock is', 'Paying and getting in', 'The console map', 'The model menu']) {
+      expect(within(guide).getByText(label)).toBeInTheDocument()
+    }
+    expect(within(guide).getByText('4 chapters')).toBeInTheDocument()
+    // Static list: no seek buttons and no m:ss times.
+    expect(within(guide).queryByRole('button', { name: /What Bedrock is/ })).not.toBeInTheDocument()
+    expect(within(guide).queryByText(/^\d+:\d{2}$/)).not.toBeInTheDocument()
+    for (const outcome of courseData.episodes[0]!.outcomes) expect(within(guide).getByText(outcome)).toBeInTheDocument()
   })
 
   it('shows the catalog length as approximate until the real video length is known', async () => {
     seedLearner()
     const a = renderApp('/learn/3')
     await heading(title(3))
-    expect(screen.getAllByText('≈ 8 min').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('about 8 minutes').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('≈ 20 min').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('about 20 minutes').length).toBeGreaterThan(0)
     a.unmount()
     renderApp('/learn/1')
     await heading(title(1))
-    expect(screen.getAllByText('7:21').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('16:16').length).toBeGreaterThan(0)
   })
 })
 
@@ -216,8 +266,8 @@ describe('quizzes', () => {
   it('keeps submit disabled until every question is answered, then grades and focuses the result', async () => {
     const user = userEvent.setup()
     seedLearner()
-    renderApp('/quiz/part-1')
-    await heading('Part 1 quiz')
+    renderApp('/quiz/episode-1')
+    await heading('E01 quiz')
     const submit = screen.getByRole('button', { name: 'Submit answers' })
     expect(submit).toBeDisabled()
     const groups = screen.getAllByRole('group')
@@ -229,7 +279,7 @@ describe('quizzes', () => {
     await user.click(submit)
     const result = await screen.findByRole('heading', { name: 'Not passed yet' })
     expect(result).toHaveFocus()
-    expect(readProgress().quizzes['part-1']).toMatchObject({ best: 2, passed: false })
+    expect(readProgress().quizzes['episode-1']).toMatchObject({ best: 2, passed: false })
 
     await user.click(screen.getByRole('button', { name: 'Retake quiz' }))
     for (const group of screen.getAllByRole('group')) {
@@ -237,15 +287,16 @@ describe('quizzes', () => {
     }
     await user.click(screen.getByRole('button', { name: 'Submit answers' }))
     expect(await screen.findByRole('heading', { name: 'Passed' })).toBeInTheDocument()
-    expect(readProgress().quizzes['part-1']).toMatchObject({ best: 3, attempts: 2, passed: true })
+    expect(readProgress().quizzes['episode-1']).toMatchObject({ best: 3, attempts: 2, passed: true })
   })
 
-  it('locks the final until every part quiz is passed', async () => {
-    seedLearner({ quizzes: { 'part-1': { best: 3, last: 3, attempts: 1, passed: true } } })
+  it('locks the final until every episode quiz is passed', async () => {
+    seedLearner({ quizzes: { 'episode-1': { best: 3, last: 3, attempts: 1, passed: true } } })
     renderApp('/quiz/final')
     await heading('Final assessment')
-    expect(screen.getByText('Locked until you pass every part quiz')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Part 2 quiz' })).toBeInTheDocument()
+    expect(screen.getByText('Locked until you pass every episode quiz')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'E02 quiz' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'E01 quiz' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Submit answers' })).not.toBeInTheDocument()
   })
 })
@@ -313,6 +364,6 @@ describe('dashboard', () => {
     act(() => {
       window.dispatchEvent(new StorageEvent('storage', { key: `awb:v1:progress:${LEARNER.email}` }))
     })
-    expect(await screen.findByText('1 of 12 required episodes complete')).toBeInTheDocument()
+    expect(await screen.findByText('1 of 5 required episodes complete')).toBeInTheDocument()
   })
 })

@@ -2,7 +2,8 @@
  * Build-prep: downloads the stock media listed below from the Pixabay API and encodes it into
  * public/media/. Needs PIXABAY_API_KEY in the environment (never commit the key) and ffmpeg on PATH.
  * Run: node scripts/fetch-media.mjs   (the encoded files are committed; this only reruns the prep)
- * If Node cannot reach the API host on this network, fetch the same ids with curl or Python instead.
+ * If Node cannot reach the API host on this network, fetch the same ids with curl or Python instead
+ * (the 2026-10-30 set was fetched with Python urllib using the same ids, sizes and quality).
  * Licence: Pixabay Content License (https://pixabay.com/service/license-summary/). See CREDITS.md.
  */
 import { execFileSync } from 'node:child_process'
@@ -30,13 +31,18 @@ async function get(url) {
   }
 }
 
-/** One photo per part theme. (The Home hero is a real-time shader, not stock media: see CREDITS.md.) */
+/**
+ * Episode covers plus the Home analogy and journey photos (see CREDITS.md). Each is encoded at 640 and
+ * 1280 px wide. (The Home hero is a real-time shader, not stock media.)
+ */
 export const MEDIA = [
-  { kind: 'image', id: 3542290, name: 'part-ocean' },
-  { kind: 'image', id: 2750627, name: 'part-midnight' },
-  { kind: 'image', id: 5189430, name: 'part-sunrise' },
-  { kind: 'image', id: 8317167, name: 'part-slate' },
-  { kind: 'image', id: 8118380, name: 'part-forest' },
+  { kind: 'image', id: 2447944, name: 'cover-entrance' },
+  { kind: 'image', id: 1850613, name: 'cover-typing' },
+  { kind: 'image', id: 1850039, name: 'cover-plated' },
+  { kind: 'image', id: 1591018, name: 'cover-lock' },
+  { kind: 'image', id: 1839406, name: 'cover-code' },
+  { kind: 'image', id: 2623071, name: 'analogy-kitchen' },
+  { kind: 'image', id: 366875, name: 'journey-plates' },
 ]
 
 async function api(kind, id) {
@@ -61,7 +67,7 @@ for (const m of MEDIA) {
   const raw = join(TMP, `${m.name}.jpg`)
   await download(hit.largeImageURL, raw)
   for (const w of [640, 1280]) {
-    ff(['-i', raw, '-vf', `scale=${w}:-2`, '-c:v', 'libwebp', '-quality', '70', join(OUT, `${m.name}-${w}.webp`)])
+    ff(['-i', raw, '-vf', `scale=${w}:-2`, '-c:v', 'libwebp', '-quality', '72', join(OUT, `${m.name}-${w}.webp`)])
   }
   credits.push({ file: m.name, source: hit.pageURL, author: hit.user, license: 'Pixabay Content License' })
 }

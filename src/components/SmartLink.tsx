@@ -13,7 +13,7 @@ export function linkKind(href: string): 'in-app' | 'external' | null {
 }
 
 /**
- * A link from content data: a site path ("/course#part-2") stays in the app; an absolute http(s) URL
+ * A link from content data: a site path ("/course#episode-2") stays in the app; an absolute http(s) URL
  * opens in a new tab with a screen reader hint. Any other value (for example "javascript:" or a typo)
  * is never emitted as an href: the content renders as plain text instead.
  */

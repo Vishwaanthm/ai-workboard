@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { LabServiceIcons } from '@/components/art/LabServiceIcons'
 import { CodeBlock } from '@/components/CodeBlock'
-import { coverFor } from '@/components/media/partCovers'
+import { coverFor } from '@/components/media/covers'
 import { Container, NotFound } from '@/components/misc'
 import { PageBand } from '@/components/PageBand'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
@@ -12,11 +12,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Progress } from '@/components/ui/progress'
-import { getLab, getEpisode, getPart } from '@/data'
+import { getLab, getEpisode } from '@/data'
 import { useAppState } from '@/context/useAppState'
 import { isStepDone, labStepCount } from '@/lib/progress'
 import { usePrefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { episodeLabel } from '@/lib/watch'
 
 export default function LabPage() {
   const { labId } = useParams()
@@ -27,8 +28,7 @@ export default function LabPage() {
   if (!lab) return <NotFound />
 
   const episode = getEpisode(data, lab.episodeId)
-  const part = episode ? getPart(data, episode.partId) : undefined
-  const cover = coverFor(part)
+  const cover = coverFor(episode)
   const total = lab.steps.length
   const doneCount = labStepCount(progress, lab.id)
 
@@ -46,7 +46,7 @@ export default function LabPage() {
         cover={cover}
         accent={cover.accent}
         figure={cover}
-        eyebrow={part ? `Lab, Part ${part.id}: ${part.title}` : 'Lab'}
+        eyebrow={episode ? `Lab, ${episodeLabel(episode.number)}: ${episode.title}` : 'Lab'}
         top={
           <Link to="/labs" className="link mb-4 inline-flex min-h-11 items-center gap-2">
             <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="size-5" />

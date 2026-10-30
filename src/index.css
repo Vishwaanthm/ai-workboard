@@ -33,12 +33,11 @@
   /* Link text on paper surfaces: lime-800, 6.4:1 on paper, 7.0:1 on card, 5.8:1 on muted. */
   --color-link: #3f6212;
   --color-link-hover: #0d1222;
-  --color-theme-ocean: #38bdf8;
+  --color-theme-glass: #67e8f9;
   --color-theme-midnight: #a5b4fc;
   --color-theme-sunrise: #fb923c;
   --color-theme-slate: #cbd5e1;
   --color-theme-forest: #4ade80;
-  --color-theme-aurora: #5eead4;
   --color-code: #0f172a;
   --color-code-foreground: #f8fafc;
   --color-code-muted: #94a3b8;
@@ -299,13 +298,13 @@
 .hero-field {
   transition: opacity 900ms var(--ease-out);
 }
-.part-scrim {
+.episode-scrim {
   background: linear-gradient(180deg, rgb(11 15 28 / 0.5) 0%, rgb(11 15 28 / 0.86) 50%, rgb(11 15 28 / 0.96) 100%);
 }
-.part-cover {
+.episode-cover {
   transition: transform 700ms var(--ease-out);
 }
-.group:hover .part-cover {
+.group:hover .episode-cover {
   transform: scale(1.05);
 }
 .hero-rise > * {
@@ -321,7 +320,7 @@
   animation-delay: 240ms;
 }
 @media (prefers-reduced-motion: reduce) {
-  .group:hover .part-cover {
+  .group:hover .episode-cover {
     transform: none;
   }
 }
@@ -423,7 +422,7 @@
   }
 }
 
-/* Use-case cards on ink: lift 2px on hover (no lift under reduced motion). */
+/* Journey step cards on ink: lift 2px on hover (no lift under reduced motion). */
 .usecase-card {
   transition:
     transform var(--duration-base) var(--ease-out),
@@ -433,9 +432,19 @@
   transform: translateY(-2px);
 }
 
-/* Explore by part: the newly selected panel rises in once. */
+/* Explore by episode (and the Check yourself answer): the newly shown panel rises in once. */
 .tab-panel-in {
   animation: rise-in var(--duration-base) var(--ease-out) both;
+}
+
+/* Provider brand marks: the unmodified Simple Icons SVG as a mask over the text colour (one flat colour). */
+.brand-mark {
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
 }
 
 /* Model provider strip: two identical tracks slide left forever (linear, 40 s). Paused while hovered or

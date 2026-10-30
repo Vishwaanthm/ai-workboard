@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react'
 import { useBackgroundMotionSetting, usePrefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import type { HeroField as Field } from './heroFieldGL'
-import { HERO_POSTER } from './partCovers'
+import { HERO_POSTER } from './covers'
 
 type Status = 'loading' | 'ready' | 'lost' | 'unsupported'
 

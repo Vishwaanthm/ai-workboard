@@ -13,8 +13,10 @@ import {
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { LabServiceIcons } from '@/components/art/LabServiceIcons'
+import { CheckYourself } from '@/components/CheckYourself'
 import { CurriculumNav } from '@/components/CurriculumNav'
-import { coverFor } from '@/components/media/partCovers'
+import { coverFor } from '@/components/media/covers'
 import { Container, NotFound, VideoPlaceholder } from '@/components/misc'
 import { NoteBlocks } from '@/components/NoteBlocks'
 import { PageHeading } from '@/components/PageHeading'
@@ -24,11 +26,19 @@ import { Callout } from '@/components/ui/callout'
 import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { VideoPlayer } from '@/components/video/VideoPlayer'
-import { firstLesson, getLab, getPart, getQuiz, isOptionalEpisode, parseEpisodeId, quizForPart } from '@/data'
+import { firstLesson, getLab, isOptionalEpisode, parseEpisodeId, quizAfterEpisode } from '@/data'
 import { useAppState } from '@/context/useAppState'
-import { episodeNeighbours, isEpisodeComplete, isLastInPart } from '@/lib/progress'
+import { episodeNeighbours, isEpisodeComplete } from '@/lib/progress'
 import { cn, plural } from '@/lib/utils'
-import { durationLabel, episodeLabel, hasVideo, spokenDurationLabel, watchRatio, watchState } from '@/lib/watch'
+import {
+  durationLabel,
+  episodeLabel,
+  hasVideo,
+  needsStaticChapters,
+  spokenDurationLabel,
+  watchRatio,
+  watchState,
+} from '@/lib/watch'
 
 export default function LessonPage() {
   const { episodeId } = useParams()
@@ -37,14 +47,10 @@ export default function LessonPage() {
   const episode = parseEpisodeId(data, episodeId)
   if (!episode) return <NotFound />
 
-  const part = getPart(data, episode.partId)
-  const cover = coverFor(part)
+  const cover = coverFor(episode)
   const lab = episode.labId ? getLab(data, episode.labId) : undefined
-  const quiz = episode.quizAfter
-    ? getQuiz(data, episode.quizAfter)
-    : isLastInPart(data, episode.id)
-      ? quizForPart(data, episode.partId)
-      : undefined
+  const quiz = quizAfterEpisode(data, episode)
+  const chapters = episode.chapters ?? []
   const { previous, next } = episodeNeighbours(data, episode.id)
   const done = isEpisodeComplete(progress, episode.id)
   const state = watchState(progress, episode)
@@ -82,8 +88,8 @@ export default function LessonPage() {
                   </li>
                   <li aria-hidden="true">/</li>
                   <li>
-                    <Link to={`/course#part-${episode.partId}`} className="link inline-flex min-h-11 items-center">
-                      {part?.title ?? 'Part'}
+                    <Link to={`/course#episode-${episode.id}`} className="link inline-flex min-h-11 items-center">
+                      Episode {episode.number}
                     </Link>
                   </li>
                 </ol>
@@ -110,7 +116,7 @@ export default function LessonPage() {
                 <span aria-hidden="true">{durationLabel(episode.durationSec, episode.durationApprox)}</span>
                 <span className="sr-only">{spokenDurationLabel(episode.durationSec, episode.durationApprox)}</span>
               </Badge>
-              {isOptionalEpisode(data, episode) ? <Badge tone="outline">Optional</Badge> : null}
+              {isOptionalEpisode(episode) ? <Badge tone="outline">Optional</Badge> : null}
               {state === 'watched' ? (
                 <Badge tone="primary">
                   <CheckCircle2 aria-hidden="true" strokeWidth={1.75} />
@@ -170,6 +176,47 @@ export default function LessonPage() {
               </Callout>
             ) : null}
 
+            <section aria-labelledby="guide-heading" className="mt-10">
+              <h2 id="guide-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
+                In this episode
+              </h2>
+              <div className="mt-5 grid gap-8 md:grid-cols-2">
+                <div className="min-w-0">
+                  <h3 className="font-mono text-sm font-semibold tracking-normal text-muted-foreground">You will be able to</h3>
+                  <ul className="mt-3 flex flex-col gap-2">
+                    {episode.outcomes.map((o) => (
+                      <li key={o} className="flex gap-2">
+                        <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="mt-0.5 size-5 shrink-0 text-progress" />
+                        <span>{o}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {episode.services && episode.services.length > 0 ? (
+                    <>
+                      <h3 className="mt-6 font-mono text-sm font-semibold tracking-normal text-muted-foreground">AWS services</h3>
+                      <LabServiceIcons services={episode.services} withLabels className="mt-3" />
+                    </>
+                  ) : null}
+                </div>
+                {needsStaticChapters(episode) ? (
+                  <div className="min-w-0">
+                    <h3 className="font-mono text-sm font-semibold tracking-normal text-muted-foreground">
+                      {chapters.length} chapters
+                    </h3>
+                    <ol className="mt-3 divide-y divide-border border-y border-border">
+                      {chapters.map((c, i) => (
+                        <li key={c.label} className="flex items-baseline gap-3 py-2.5">
+                          <span className="w-6 shrink-0 font-mono text-sm text-muted-foreground">{i + 1}</span>
+                          <span>{c.label}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ) : null}
+              </div>
+              {episode.check ? <CheckYourself check={episode.check} className="mt-8" /> : null}
+            </section>
+
             {lab || quiz ? (
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {lab ? (
@@ -199,7 +246,7 @@ export default function LessonPage() {
                   >
                     <span className="flex items-center gap-2 font-mono text-sm font-semibold text-link">
                       <ListChecks aria-hidden="true" strokeWidth={1.75} className="size-5" />
-                      {quiz.partId === 'final' ? 'Final assessment' : `End of ${part?.title ?? 'this part'}`}
+                      {quiz.episodeId === 'final' ? 'Final assessment' : `Quiz for ${episodeLabel(episode.number)}`}
                     </span>
                     <span className="font-display text-lg font-bold">Take the {quiz.title}</span>
                     <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">

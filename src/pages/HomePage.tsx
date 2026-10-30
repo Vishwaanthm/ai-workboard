@@ -1,35 +1,35 @@
 import { ArrowRight, Award, BookOpen, FlaskConical, ListChecks } from 'lucide-react'
 import { useRef } from 'react'
 import { Link } from 'react-router'
-import { HubArt } from '@/components/art/HubArt'
 import { LabServiceIcons } from '@/components/art/LabServiceIcons'
+import { Analogy } from '@/components/home/Analogy'
 import { CopyCommand } from '@/components/home/CopyCommand'
-import { ExploreByPart } from '@/components/home/ExploreByPart'
+import { ExploreByEpisode } from '@/components/home/ExploreByEpisode'
+import { Journey } from '@/components/home/Journey'
 import { LearningHub } from '@/components/home/LearningHub'
 import { ModelStrip } from '@/components/home/ModelStrip'
-import { UseCases } from '@/components/home/UseCases'
 import { HeroField } from '@/components/media/HeroField'
-import { PART_COVERS } from '@/components/media/partCovers'
+import { coverFor, JOURNEY_IMAGE } from '@/components/media/covers'
 import { Container } from '@/components/misc'
 import { Reveal } from '@/components/motion/Reveal'
 import { PageHeading } from '@/components/PageHeading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { courseCounts, episodesInPart } from '@/data'
+import { courseCounts } from '@/data'
 import { home } from '@/data/home'
 import { site } from '@/data/site'
 import { useAppState } from '@/context/useAppState'
 import { nextStep, nextStepHref } from '@/lib/progress'
 import { cn, plural } from '@/lib/utils'
-import { totalDurationLabel } from '@/lib/watch'
+import { durationLabel, episodeLabel, spokenDurationLabel, totalDurationLabel } from '@/lib/watch'
 
-/** Asymmetric 6-column bento for the parts: 4+2, then 2+2+2. */
+/** Asymmetric 6-column bento for the episodes: 4+2, then 2+2+2. */
 const CARD_SPANS = ['md:col-span-4', 'md:col-span-2', 'md:col-span-2', 'md:col-span-2', 'md:col-span-2', 'md:col-span-3']
 
 const howItWorks = [
-  { icon: BookOpen, title: 'Learn', text: 'Watch each short video episode; it is marked complete once you have seen most of it.' },
+  { icon: BookOpen, title: 'Learn', text: 'Watch each video episode; it is marked complete once you have seen most of it.' },
   { icon: FlaskConical, title: 'Practice', text: 'Work through guided labs and tick off each step as you go.' },
-  { icon: ListChecks, title: 'Check', text: 'Pass a short quiz at the end of each part, then the final assessment.' },
+  { icon: ListChecks, title: 'Check', text: 'Pass a short quiz after each episode, then the final assessment.' },
   { icon: Award, title: 'Certify', text: 'Print a certificate of completion with your name, date and ID.' },
 ]
 
@@ -82,19 +82,19 @@ export default function HomePage() {
         <Container>
           <Reveal className="grid gap-4 md:grid-cols-[1fr_1.2fr] md:items-end">
             <h2 id="map-heading" className="text-[34px] leading-[1.02] md:text-[52px]">
-              {plural(counts.parts, 'part')}, {plural(counts.episodes, 'episode')}
+              {plural(counts.episodes, 'video')}, {totalDurationLabel(data.episodes)}
             </h2>
             <p className="max-w-[56ch] text-lg text-muted-foreground">{data.course.summary}</p>
           </Reveal>
           <ul className="mt-12 grid gap-4 md:grid-cols-6">
-            {data.parts.map((part, i) => {
-              const cover = PART_COVERS[part.theme ?? 'midnight']
-              const eps = episodesInPart(data, part.id)
+            {data.episodes.map((episode, i) => {
+              const cover = coverFor(episode)
+              const chapters = episode.chapters?.length ?? 0
               return (
                 <Reveal
                   as="li"
                   index={i}
-                  key={part.id}
+                  key={episode.id}
                   className={cn('group relative isolate overflow-hidden rounded-panel bg-ink', CARD_SPANS[i % CARD_SPANS.length])}
                 >
                   <img
@@ -106,22 +106,29 @@ export default function HomePage() {
                     decoding="async"
                     width={1280}
                     height={720}
-                    className="part-cover absolute inset-0 -z-10 size-full object-cover"
+                    className="episode-cover absolute inset-0 -z-10 size-full object-cover"
                   />
-                  <div aria-hidden="true" className="part-scrim absolute inset-0 -z-10" />
-                  <Link to={`/course#part-${part.id}`} className="on-ink flex h-full min-h-72 flex-col justify-between gap-8 p-6 md:p-7">
-                    <span className="flex items-center gap-3 text-sm font-semibold text-on-ink">
+                  <div aria-hidden="true" className="episode-scrim absolute inset-0 -z-10" />
+                  <Link
+                    to={`/course#episode-${episode.id}`}
+                    className="on-ink flex h-full min-h-72 flex-col justify-between gap-8 p-6 md:p-7"
+                  >
+                    <span className="flex flex-wrap items-center gap-3 text-sm font-semibold text-on-ink">
                       <span aria-hidden="true" className={cn('h-1 w-8 rounded-full', cover.accent)} />
-                      Part {part.id}
-                      {part.optional ? <Badge tone="outline">Optional</Badge> : null}
+                      <span className="font-mono">{episodeLabel(episode.number)}</span>
+                      <span className="font-mono font-normal text-on-ink-muted">
+                        <span aria-hidden="true">{durationLabel(episode.durationSec, episode.durationApprox)}</span>
+                        <span className="sr-only">, {spokenDurationLabel(episode.durationSec, episode.durationApprox)}</span>
+                      </span>
+                      {episode.optional ? <Badge tone="outline">Optional</Badge> : null}
                     </span>
                     <span>
                       <h3 className="font-display text-[28px] leading-[1.05] font-bold tracking-[-0.02em] md:text-[34px]">
-                        {part.title}
+                        {episode.title}
                       </h3>
-                      <span className="mt-3 block max-w-[48ch] text-on-ink-muted">{part.outcome}</span>
+                      <span className="mt-3 block max-w-[48ch] text-on-ink-muted">{episode.summary}</span>
                       <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-on-ink">
-                        {plural(eps.length, 'episode')}, {totalDurationLabel(eps)}
+                        {chapters > 0 ? plural(chapters, 'chapter') : 'View episode'}
                         <ArrowRight
                           aria-hidden="true"
                           strokeWidth={1.75}
@@ -137,19 +144,9 @@ export default function HomePage() {
         </Container>
       </section>
 
-      <section aria-labelledby="hub-heading" className="on-ink relative overflow-hidden bg-ink py-16 md:py-24">
-        <Container className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
-          <Reveal>
-            <h2 id="hub-heading" className="text-[34px] leading-[1.02] md:text-[48px]">
-              One API in front of many models
-            </h2>
-            <p className="mt-5 max-w-[46ch] text-lg text-on-ink-muted">
-              Amazon Bedrock puts models from many providers behind a single AWS service, in your own Region.
-            </p>
-          </Reveal>
-          <Reveal index={1}>
-            <HubArt className="mx-auto max-w-[560px] overflow-hidden rounded-panel shadow-lift" />
-          </Reveal>
+      <section aria-labelledby="analogy-heading" className="on-ink relative overflow-hidden bg-ink py-16 md:py-24">
+        <Container>
+          <Analogy analogy={home.analogy} headingId="analogy-heading" />
         </Container>
       </section>
 
@@ -173,27 +170,43 @@ export default function HomePage() {
         <Container>
           <Reveal className="grid gap-4 md:grid-cols-[1fr_1.2fr] md:items-end">
             <h2 id="explore-heading" className="text-[34px] leading-[1.02] md:text-[52px]">
-              Explore by part
+              Explore by episode
             </h2>
             <p className="max-w-[56ch] text-lg text-muted-foreground">{home.explore.lede}</p>
           </Reveal>
           <div className="mt-10">
-            <ExploreByPart data={data} snippets={home.explore.snippets} />
+            <ExploreByEpisode data={data} snippets={home.explore.snippets} />
           </div>
         </Container>
       </section>
 
-      {home.useCases.items.length > 0 ? (
-        <section aria-labelledby="build-heading" className="on-ink bg-ink py-16 md:py-24">
+      {home.journey.steps.length > 0 ? (
+        <section aria-labelledby="journey-heading" className="on-ink bg-ink py-16 md:py-24">
           <Container>
-            <Reveal className="grid gap-4 md:grid-cols-[1fr_1.2fr] md:items-end">
-              <h2 id="build-heading" className="text-[34px] leading-[1.02] md:text-[52px]">
-                What you'll build
-              </h2>
-              <p className="max-w-[56ch] text-lg text-on-ink-muted">{home.useCases.lede}</p>
-            </Reveal>
+            <div className="grid items-end gap-8 md:grid-cols-[1.2fr_1fr]">
+              <Reveal>
+                <p className="font-mono text-sm font-semibold text-volt">Follow along</p>
+                <h2 id="journey-heading" className="mt-3 text-[34px] leading-[1.02] md:text-[52px]">
+                  {home.journey.title}
+                </h2>
+                <p className="mt-4 max-w-[48ch] text-lg text-on-ink-muted">{home.journey.lede}</p>
+              </Reveal>
+              <Reveal index={1} className="overflow-hidden rounded-panel border border-ink-line">
+                <img
+                  src={JOURNEY_IMAGE.src}
+                  srcSet={JOURNEY_IMAGE.srcSet}
+                  sizes="(min-width: 768px) 40vw, 100vw"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width={1280}
+                  height={768}
+                  className="aspect-[16/7] w-full object-cover object-bottom"
+                />
+              </Reveal>
+            </div>
             <div className="mt-12">
-              <UseCases data={data} items={home.useCases.items} />
+              <Journey data={data} steps={home.journey.steps} />
             </div>
           </Container>
         </section>

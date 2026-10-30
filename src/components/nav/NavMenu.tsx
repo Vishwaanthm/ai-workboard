@@ -1,18 +1,19 @@
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { useEffect, useId, useRef, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
-import { coverFor } from '@/components/media/partCovers'
+import { coverFor } from '@/components/media/covers'
 import { home } from '@/data/home'
 import type { CourseData, HomeSections } from '@/data/types'
 import { cn, plural } from '@/lib/utils'
+import { episodeLabel, totalDurationLabel } from '@/lib/watch'
 
 export interface NavMenuItem {
   to: string
   title: string
   description?: string
-  /** Small mono label above the title, such as "Part 2". */
+  /** Small mono label above the title, such as "E02". */
   eyebrow?: string
-  /** Decorative accent bar class (part theme); always shown next to the eyebrow text. */
+  /** Decorative accent bar class (episode theme); always shown next to the eyebrow text. */
   accent?: string
   /** Set on the overview item: rendered as the large lead tile of a wide menu. */
   lead?: boolean
@@ -30,7 +31,7 @@ export interface NavMenuGroup {
 }
 
 /**
- * The header menus. Part names and outcomes come from course data and the Learn descriptions from
+ * The header menus. Episode titles and "Covers" lines come from course data and the Learn descriptions from
  * home.ts (learnMenu); the routes themselves stay here.
  */
 export function navMenuGroups(data: CourseData, learn: HomeSections['learnMenu'] = home.learnMenu): NavMenuGroup[] {
@@ -48,16 +49,16 @@ export function navMenuGroups(data: CourseData, learn: HomeSections['learnMenu']
           lead: true,
           footnote: [
             data.course.level,
-            plural(data.parts.length, 'part'),
             plural(data.episodes.length, 'episode'),
+            totalDurationLabel(data.episodes),
           ].join(', '),
         },
-        ...data.parts.map((part) => ({
-          to: `/course#part-${part.id}`,
-          eyebrow: `Part ${part.id}`,
-          title: part.title,
-          description: part.outcome,
-          accent: coverFor(part).accent,
+        ...data.episodes.map((episode) => ({
+          to: `/course#episode-${episode.id}`,
+          eyebrow: episodeLabel(episode.number),
+          title: episode.title,
+          description: episode.summary,
+          accent: coverFor(episode).accent,
         })),
       ],
     },

@@ -1,8 +1,8 @@
-import { CheckCircle2, CircleDashed, FlaskConical } from 'lucide-react'
+import { ArrowRight, CheckCircle2, CircleDashed, FlaskConical } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ProgressRing } from '@/components/art/ProgressRing'
-import { COURSE_COVER, coverFor } from '@/components/media/partCovers'
+import { COURSE_COVER, coverFor } from '@/components/media/covers'
 import { Container } from '@/components/misc'
 import { Reveal } from '@/components/motion/Reveal'
 import { PageBand } from '@/components/PageBand'
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Progress } from '@/components/ui/progress'
 import { ContinueWatching } from '@/components/video/ContinueWatching'
-import { courseCounts, episodesInPart, firstLesson, isOptionalEpisode } from '@/data'
+import { courseCounts, firstLesson, isOptionalEpisode } from '@/data'
 import { site } from '@/data/site'
 import { useAppState } from '@/context/useAppState'
 import {
@@ -24,10 +24,12 @@ import {
 } from '@/lib/progress'
 import { cn, plural } from '@/lib/utils'
 import {
+  courseDuration,
   durationLabel,
   episodeLabel,
-  partDuration,
+  formatDuration,
   spokenDurationLabel,
+  timedChapters,
   totalDurationLabel,
   watchRatio,
   watchState,
@@ -39,7 +41,7 @@ function EnrolCard() {
   const included = [
     `${plural(counts.episodes, 'video episode')}, ${totalDurationLabel(data.episodes)} in total`,
     plural(counts.labs, 'guided lab'),
-    `${plural(counts.partQuizzes, 'part quiz', 'part quizzes')}${counts.hasFinal ? ' and a final assessment' : ''}`,
+    `${plural(counts.episodeQuizzes, 'episode quiz', 'episode quizzes')}${counts.hasFinal ? ' and a final assessment' : ''}`,
     'A printable certificate of completion',
   ]
 
@@ -105,25 +107,29 @@ export default function CoursePage() {
   const { data, user, progress } = useAppState()
   const { hash } = useLocation()
   const counts = courseCounts(data)
-  const hashPart = /^#part-(\d+)$/.exec(hash)?.[1]
-  const openParts = hashPart ? [`part-${hashPart}`] : data.parts[0] ? [`part-${data.parts[0].id}`] : []
-  // Controlled so a #part-N link followed while already on this page (header Course menu) opens that part.
-  const [openItems, setOpenItems] = useState<string[]>(openParts)
+  const hashEpisode = /^#episode-(\d+)$/.exec(hash)?.[1]
+  const openEpisodes = hashEpisode
+    ? [`episode-${hashEpisode}`]
+    : data.episodes[0]
+      ? [`episode-${data.episodes[0].id}`]
+      : []
+  // Controlled so an #episode-N link followed while already on this page (header Course menu) opens it.
+  const [openItems, setOpenItems] = useState<string[]>(openEpisodes)
   const [seenHash, setSeenHash] = useState(hash)
   if (hash !== seenHash) {
     setSeenHash(hash)
-    if (hashPart && !openItems.includes(`part-${hashPart}`)) setOpenItems([...openItems, `part-${hashPart}`])
+    if (hashEpisode && !openItems.includes(`episode-${hashEpisode}`)) setOpenItems([...openItems, `episode-${hashEpisode}`])
   }
 
   const meta = [
     data.course.level,
-    plural(counts.parts, 'part'),
-    plural(counts.episodes, 'episode'),
-    `${totalDurationLabel(data.episodes)} of video`,
+    plural(counts.episodes, 'video'),
+    `${totalDurationLabel(data.episodes)} in total`,
+    plural(counts.chapters, 'chapter'),
     plural(counts.labs, 'lab'),
     counts.hasFinal ? 'Quizzes and certificate' : 'Quizzes',
   ]
-  const totalSec = data.episodes.reduce((sum, e) => sum + e.durationSec, 0)
+  const totalSec = courseDuration(data)
 
   return (
     <>
@@ -141,14 +147,14 @@ export default function CoursePage() {
             </li>
           ))}
         </ul>
-        {/* Course spine: one segment per part, as long as the part's share of the running time. */}
+        {/* Course spine: one segment per episode, as long as the episode's share of the running time. */}
         <div aria-hidden="true" className="mt-8 flex max-w-xl gap-1.5">
-          {data.parts.map((part) => {
-            const share = totalSec > 0 ? partDuration(data, part.id) / totalSec : 1 / data.parts.length
+          {data.episodes.map((e) => {
+            const share = totalSec > 0 ? e.durationSec / totalSec : 1 / data.episodes.length
             return (
-              <span key={part.id} className="flex min-w-0 flex-col gap-2" style={{ flexGrow: share, flexBasis: 0 }}>
-                <span className={cn('h-1.5 rounded-full', coverFor(part).accent)} />
-                <span className="truncate font-mono text-xs text-on-ink-muted">P{part.id}</span>
+              <span key={e.id} className="flex min-w-0 flex-col gap-2" style={{ flexGrow: share, flexBasis: 0 }}>
+                <span className={cn('h-1.5 rounded-full', coverFor(e).accent)} />
+                <span className="truncate font-mono text-xs text-on-ink-muted">{episodeLabel(e.number)}</span>
               </span>
             )
           })}
@@ -173,18 +179,26 @@ export default function CoursePage() {
                 What you'll learn
               </h2>
               <ol className="mt-6 grid gap-4 sm:grid-cols-2">
-                {data.parts.map((part) => (
+                {data.episodes.map((e, i) => (
                   <li
-                    key={part.id}
-                    className="relative overflow-hidden rounded-panel border border-border bg-card p-5 pl-6 shadow-raised"
+                    key={e.id}
+                    className={cn(
+                      'relative overflow-hidden rounded-panel border border-border bg-card p-5 pl-6 shadow-raised',
+                      // Odd count: the last card spans the row instead of leaving a hole.
+                      data.episodes.length % 2 === 1 && i === data.episodes.length - 1 && 'sm:col-span-2',
+                    )}
                   >
-                    <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', coverFor(part).accent)} />
-                    <span className="font-mono text-sm font-semibold text-muted-foreground">Part {part.id}</span>
-                    <span className="mt-1 block font-display text-lg font-bold tracking-[-0.01em]">{part.title}</span>
-                    <span className="mt-2 flex gap-2 text-muted-foreground">
-                      <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="mt-0.5 size-5 shrink-0 text-progress" />
-                      <span>{part.outcome}</span>
-                    </span>
+                    <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', coverFor(e).accent)} />
+                    <span className="font-mono text-sm font-semibold text-muted-foreground">{episodeLabel(e.number)}</span>
+                    <span className="mt-1 block font-display text-lg font-bold tracking-[-0.01em]">{e.title}</span>
+                    <ul className="mt-3 flex flex-col gap-1.5 text-muted-foreground">
+                      {e.outcomes.map((o) => (
+                        <li key={o} className="flex gap-2">
+                          <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="mt-0.5 size-5 shrink-0 text-progress" />
+                          <span>{o}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ol>
@@ -195,15 +209,17 @@ export default function CoursePage() {
                 Curriculum
               </h2>
               <Accordion type="multiple" value={openItems} onValueChange={setOpenItems} className="mt-6 flex flex-col gap-4">
-                {data.parts.map((part) => {
-                  const eps = episodesInPart(data, part.id)
-                  const total = partDuration(data, part.id)
-                  const cover = coverFor(part)
+                {data.episodes.map((m) => {
+                  const cover = coverFor(m)
+                  const state = user ? watchState(progress, m) : 'not-started'
+                  const ratio = user ? watchRatio(progress, m) : 0
+                  const chapters = m.chapters ?? []
+                  const timed = timedChapters(m)
                   return (
                     <AccordionItem
-                      key={part.id}
-                      value={`part-${part.id}`}
-                      id={`part-${part.id}`}
+                      key={m.id}
+                      value={`episode-${m.id}`}
+                      id={`episode-${m.id}`}
                       className="scroll-mt-24 overflow-hidden rounded-panel border border-border bg-card shadow-raised"
                     >
                       <AccordionTrigger className="px-4 sm:px-5">
@@ -226,77 +242,74 @@ export default function CoursePage() {
                           <span className="flex min-w-0 flex-col gap-1">
                             <span className="flex items-center gap-2 font-mono text-sm font-semibold text-muted-foreground">
                               <span aria-hidden="true" className={cn('h-1 w-5 rounded-full sm:hidden', cover.accent)} />
-                              Part {part.id}
+                              {episodeLabel(m.number)}
                             </span>
                             <span className="flex flex-wrap items-center gap-2 font-display text-xl font-bold tracking-[-0.01em]">
-                              {part.title}
-                              {part.optional ? <Badge tone="outline">Optional</Badge> : null}
+                              {m.title}
+                              {isOptionalEpisode(m) ? <Badge tone="outline">Optional</Badge> : null}
                             </span>
                             <span className="text-sm text-muted-foreground">
-                              {plural(eps.length, 'episode')}, <span aria-hidden="true">{totalDurationLabel(eps)}</span>
-                              <span className="sr-only">{spokenDurationLabel(total, eps.some((e) => e.durationApprox))}</span>
+                              <span aria-hidden="true">{durationLabel(m.durationSec, m.durationApprox)}</span>
+                              <span className="sr-only">{spokenDurationLabel(m.durationSec, m.durationApprox)}</span>
+                              {chapters.length > 0 ? `, ${plural(chapters.length, 'chapter')}` : ''}
+                              {state === 'watched' ? ', watched' : state === 'partly' ? `, ${Math.round(ratio * 100)}% watched` : ''}
                             </span>
                           </span>
                         </span>
                       </AccordionTrigger>
-                      <AccordionContent className="border-t border-border px-2 pt-2 sm:px-3">
-                        <ol className="flex flex-col gap-1">
-                          {eps.map((m) => {
-                            const state = user ? watchState(progress, m) : 'not-started'
-                            const ratio = user ? watchRatio(progress, m) : 0
-                            return (
-                              <li key={m.id}>
-                                <Link
-                                  to={`/learn/${m.id}`}
-                                  className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-control px-2 py-2.5 transition-colors duration-[120ms] hover:bg-muted"
-                                >
-                                  <span className="flex min-w-0 gap-3">
-                                    <span className="mt-0.5 w-8 shrink-0 font-mono text-sm text-muted-foreground">
-                                      {episodeLabel(m.number)}
-                                    </span>
-                                    <span className="min-w-0">
-                                      <span className="font-semibold">{m.title}</span>
-                                      <span className="block text-sm text-muted-foreground">{m.summary}</span>
-                                      {state === 'partly' ? (
-                                        <Progress
-                                          value={Math.round(ratio * 100)}
-                                          max={100}
-                                          label={`${m.title} watched`}
-                                          className="mt-2 max-w-48"
-                                        />
-                                      ) : null}
-                                    </span>
-                                  </span>
-                                  <span className="flex flex-wrap items-center gap-2">
-                                    <span className="font-mono text-sm text-muted-foreground">
-                                      <span aria-hidden="true">{durationLabel(m.durationSec, m.durationApprox)}</span>
-                                      <span className="sr-only">{spokenDurationLabel(m.durationSec, m.durationApprox)}</span>
-                                    </span>
-                                    {m.labId ? (
-                                      <Badge tone="neutral">
-                                        <FlaskConical aria-hidden="true" strokeWidth={1.75} />
-                                        Lab
-                                      </Badge>
-                                    ) : null}
-                                    {isOptionalEpisode(data, m) && !part.optional ? <Badge tone="outline">Optional</Badge> : null}
-                                    {state === 'watched' ? (
-                                      <Badge tone="primary">
-                                        <CheckCircle2 aria-hidden="true" strokeWidth={1.75} />
-                                        Watched
-                                      </Badge>
-                                    ) : null}
-                                    {state === 'partly' ? (
-                                      <Badge tone="neutral">
-                                        <CircleDashed aria-hidden="true" strokeWidth={1.75} />
-                                        {Math.round(ratio * 100)}% watched
-                                      </Badge>
-                                    ) : null}
-                                  </span>
-                                </Link>
+                      <AccordionContent className="border-t border-border px-4 pt-4 sm:px-5">
+                        <p className="max-w-[62ch] text-muted-foreground">
+                          <span className="font-semibold text-foreground">Covers: </span>
+                          {m.summary}
+                        </p>
+                        {state === 'partly' ? (
+                          <Progress
+                            value={Math.round(ratio * 100)}
+                            max={100}
+                            label={`${m.title} watched`}
+                            className="mt-3 max-w-48"
+                          />
+                        ) : null}
+                        {chapters.length > 0 ? (
+                          <ol
+                            aria-label={`${episodeLabel(m.number)} chapters`}
+                            className="mt-4 divide-y divide-border border-y border-border"
+                          >
+                            {chapters.map((c, i) => (
+                              <li key={c.label} className="flex items-baseline gap-3 py-2.5">
+                                <span className="w-12 shrink-0 font-mono text-sm text-muted-foreground">
+                                  {timed[i] ? formatDuration(timed[i].t) : i + 1}
+                                </span>
+                                <span>{c.label}</span>
                               </li>
-                            )
-                          })}
-                        </ol>
+                            ))}
+                          </ol>
+                        ) : null}
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <Link to={`/learn/${m.id}`} className="link inline-flex min-h-11 items-center gap-2">
+                            Open {episodeLabel(m.number)}
+                            <span className="sr-only">: {m.title}</span>
+                            <ArrowRight aria-hidden="true" strokeWidth={1.75} className="size-4" />
+                          </Link>
+                          {m.labId ? (
+                            <Badge tone="neutral">
+                              <FlaskConical aria-hidden="true" strokeWidth={1.75} />
+                              Lab
+                            </Badge>
+                          ) : null}
+                          {state === 'watched' ? (
+                            <Badge tone="primary">
+                              <CheckCircle2 aria-hidden="true" strokeWidth={1.75} />
+                              Watched
+                            </Badge>
+                          ) : null}
+                          {state === 'partly' ? (
+                            <Badge tone="neutral">
+                              <CircleDashed aria-hidden="true" strokeWidth={1.75} />
+                              {Math.round(ratio * 100)}% watched
+                            </Badge>
+                          ) : null}
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   )

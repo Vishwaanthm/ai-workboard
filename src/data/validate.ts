@@ -5,14 +5,16 @@ export function validateCourseData(data: CourseData): string[] {
   const errors: string[] = []
   const dup = <T,>(values: T[]) => values.filter((v, i) => values.indexOf(v) !== i)
 
-  for (const id of dup(data.parts.map((p) => p.id))) errors.push(`Duplicate part id ${id}`)
   for (const id of dup(data.episodes.map((m) => m.id))) errors.push(`Duplicate episode id ${id}`)
   for (const id of dup(data.labs.map((l) => l.id))) errors.push(`Duplicate lab id ${id}`)
   for (const id of dup(data.quizzes.map((q) => q.id))) errors.push(`Duplicate quiz id ${id}`)
 
   for (const m of data.episodes) {
     if (!Number.isInteger(m.id) || m.id < 0) errors.push(`Episode id ${m.id} must be a non-negative integer`)
-    if (!data.parts.some((p) => p.id === m.partId)) errors.push(`Episode ${m.id} has unknown part ${m.partId}`)
+    if (m.outcomes.length === 0) errors.push(`Episode ${m.id} needs at least one outcome`)
+    if (m.check && !(m.check.question.trim() && m.check.answer.trim())) {
+      errors.push(`Episode ${m.id} check needs a question and an answer`)
+    }
     if (m.labId) {
       const lab = data.labs.find((l) => l.id === m.labId)
       if (!lab) errors.push(`Episode ${m.id} points to unknown lab "${m.labId}"`)
@@ -31,12 +33,12 @@ export function validateCourseData(data: CourseData): string[] {
 
   for (const n of dup(data.episodes.map((e) => e.number))) errors.push(`Duplicate episode number ${n}`)
 
-  const finals = data.quizzes.filter((q) => q.partId === 'final')
+  const finals = data.quizzes.filter((q) => q.episodeId === 'final')
   if (finals.length > 1) errors.push(`Expected at most one final quiz, found ${finals.length}`)
 
-  for (const part of data.parts) {
-    const count = data.quizzes.filter((q) => q.partId === part.id).length
-    if (count > 1) errors.push(`Part ${part.id} has ${count} quizzes; at most one is allowed`)
+  for (const e of data.episodes) {
+    const count = data.quizzes.filter((q) => q.episodeId === e.id).length
+    if (count > 1) errors.push(`Episode ${e.id} has ${count} quizzes; at most one is allowed`)
   }
 
   for (const e of data.episodes) {
@@ -44,15 +46,20 @@ export function validateCourseData(data: CourseData): string[] {
     if (e.quizAfter && !data.quizzes.some((q) => q.id === e.quizAfter)) {
       errors.push(`Episode ${e.id} quizAfter points to unknown quiz "${e.quizAfter}"`)
     }
-    for (const c of e.chapters ?? []) {
-      if (!(c.t >= 0 && c.t <= e.durationSec)) errors.push(`Episode ${e.id} chapter "${c.label}" is outside the episode`)
+    const chapters = e.chapters ?? []
+    for (const c of chapters) {
+      if (c.t !== undefined && !(c.t >= 0 && c.t <= e.durationSec)) {
+        errors.push(`Episode ${e.id} chapter "${c.label}" is outside the episode`)
+      }
     }
+    const timed = chapters.filter((c) => c.t !== undefined).length
+    if (timed > 0 && timed < chapters.length) errors.push(`Episode ${e.id} gives start times for some chapters only`)
   }
 
   for (const quiz of data.quizzes) {
     if (!/^[a-z0-9-]+$/.test(quiz.id)) errors.push(`Quiz id "${quiz.id}" must be a lowercase slug`)
-    if (quiz.partId !== 'final' && !data.parts.some((p) => p.id === quiz.partId)) {
-      errors.push(`Quiz "${quiz.id}" has unknown part ${quiz.partId}`)
+    if (quiz.episodeId !== 'final' && !data.episodes.some((e) => e.id === quiz.episodeId)) {
+      errors.push(`Quiz "${quiz.id}" has unknown episode ${quiz.episodeId}`)
     }
     if (quiz.passMark !== undefined && !(quiz.passMark > 0 && quiz.passMark <= 1)) {
       errors.push(`Quiz "${quiz.id}" passMark must be in (0, 1]`)

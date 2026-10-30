@@ -1,11 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { courseData, finalQuiz, partQuizzes } from '@/data'
+import { courseData, episodeQuizzes, finalQuiz } from '@/data'
 import * as auth from '@/lib/auth'
 import { base32Of40Bits, CERTIFICATE_ID_PATTERN, certificateId } from '@/lib/hash'
 import {
   certificateEligibility,
   isEligible,
-  isLastInPart,
   nextStep,
   recordQuiz,
   resetLab,
@@ -71,8 +70,8 @@ describe('schema', () => {
         completedEpisodes: [1, 1, 999, 'x'],
         labSteps: { 'lab-1': ['step-1', 'nope'], 'ghost-lab': ['step-1'] },
         quizzes: {
-          'part-1': { best: 3, last: 3, attempts: 2, passed: false },
-          'part-2': { best: 99, last: 1, attempts: 1, passed: true },
+          'episode-1': { best: 3, last: 3, attempts: 2, passed: false },
+          'episode-2': { best: 99, last: 1, attempts: 1, passed: true },
           'ghost-quiz': { best: 1, last: 1, attempts: 1, passed: true },
           final: { best: 1, last: 1, attempts: 1, passed: true },
         },
@@ -84,7 +83,7 @@ describe('schema', () => {
       completedEpisodes: [1],
       labSteps: { 'lab-1': ['step-1'] },
       quizzes: {
-        'part-1': { best: 3, last: 3, attempts: 2, passed: true },
+        'episode-1': { best: 3, last: 3, attempts: 2, passed: true },
         final: { best: 1, last: 1, attempts: 1, passed: false },
       },
       certificate: null,
@@ -198,46 +197,41 @@ describe('progress rules', () => {
     expect(p.quizzes[quiz.id]).toEqual({ best: 3, last: 1, attempts: 2, passed: true })
   })
 
-  it('orders next steps: episodes, part quiz, next part, final, certificate', () => {
+  it('orders next steps: each episode, then its quiz, then the final and the certificate', () => {
     let p = emptyProgress()
     expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 1 } })
-    p = setEpisodeComplete(setEpisodeComplete(p, 1, true), 2, true)
-    expect(nextStep(p, courseData)).toMatchObject({ kind: 'quiz', quiz: { id: 'part-1' } })
+    p = setEpisodeComplete(p, 1, true)
+    expect(nextStep(p, courseData)).toMatchObject({ kind: 'quiz', quiz: { id: 'episode-1' } })
     p = recordQuiz(p, courseData.quizzes[0]!, 3)
-    expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 3 } })
-    for (const id of [3, 4, 5]) p = setEpisodeComplete(p, id, true)
-    p = recordQuiz(p, courseData.quizzes[1]!, 3)
-    // Parts 3 to 5 have no quiz: the next step is their first unwatched episode.
-    expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 6 } })
-    for (const id of [6, 7, 8, 9, 10, 11]) p = setEpisodeComplete(p, id, true)
-    // Every part is required: the last episode comes before the final.
-    expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 12 } })
-    p = setEpisodeComplete(p, 12, true)
+    expect(nextStep(p, courseData)).toMatchObject({ kind: 'episode', episode: { id: 2 } })
+    for (const id of [2, 3, 4, 5]) p = setEpisodeComplete(p, id, true)
+    // Watching ahead does not skip a quiz: the earliest unpassed episode quiz comes first.
+    expect(nextStep(p, courseData)).toMatchObject({ kind: 'quiz', quiz: { id: 'episode-2' } })
+    for (const quiz of episodeQuizzes(courseData)) p = recordQuiz(p, quiz, 3)
     expect(nextStep(p, courseData)).toMatchObject({ kind: 'final' })
     p = recordQuiz(p, finalQuiz(courseData)!, 3)
     expect(nextStep(p, courseData)).toEqual({ kind: 'certificate' })
   })
 
-  it('lists unmet certificate requirements; optional episodes are not required', () => {
-    expect(certificateEligibility(emptyProgress(), courseData)).toHaveLength(12 + partQuizzes(courseData).length + 1)
-    const p = completeProgress()
-    p.completedEpisodes = p.completedEpisodes.filter((id) => id !== 12)
-    expect(isEligible(p, courseData)).toBe(false)
-    // Mark episode 12 optional, or put it in an optional part: then it is no longer needed.
+  it('offers a quiz on an optional episode before the final, since it still unlocks the final', () => {
     const data = cloneData()
-    data.episodes[11] = { ...data.episodes[11]!, optional: true }
-    expect(certificateEligibility(emptyProgress(), data)).toHaveLength(11 + partQuizzes(data).length + 1)
-    expect(isEligible(p, data)).toBe(true)
-    const optionalPart = cloneData()
-    optionalPart.parts.push({ id: 6, title: 'Extra', outcome: 'Extra.', optional: true })
-    optionalPart.episodes[11] = { ...optionalPart.episodes[11]!, partId: 6 }
-    expect(isEligible(p, optionalPart)).toBe(true)
+    data.episodes[4] = { ...data.episodes[4]!, optional: true }
+    let p = emptyProgress()
+    for (const id of [1, 2, 3, 4]) p = setEpisodeComplete(p, id, true)
+    for (const quiz of episodeQuizzes(data).filter((q) => q.episodeId !== 5)) p = recordQuiz(p, quiz, 3)
+    expect(nextStep(p, data)).toMatchObject({ kind: 'quiz', quiz: { id: 'episode-5' } })
   })
 
-  it('knows the last episode of each part', () => {
-    expect(isLastInPart(courseData, 2)).toBe(true)
-    expect(isLastInPart(courseData, 1)).toBe(false)
-    expect(isLastInPart(courseData, 12)).toBe(true)
+  it('lists unmet certificate requirements; optional episodes are not required', () => {
+    expect(certificateEligibility(emptyProgress(), courseData)).toHaveLength(5 + episodeQuizzes(courseData).length + 1)
+    const p = completeProgress()
+    p.completedEpisodes = p.completedEpisodes.filter((id) => id !== 5)
+    expect(isEligible(p, courseData)).toBe(false)
+    // Mark episode 5 optional: then watching it is no longer needed.
+    const data = cloneData()
+    data.episodes[4] = { ...data.episodes[4]!, optional: true }
+    expect(certificateEligibility(emptyProgress(), data)).toHaveLength(4 + episodeQuizzes(data).length + 1)
+    expect(isEligible(p, data)).toBe(true)
   })
 })
 
@@ -291,15 +285,15 @@ describe('watch progress', () => {
 
   it('formats durations and course totals', () => {
     expect(formatDuration(420)).toBe('7:00')
-    expect(formatDuration(5447)).toBe('90:47')
-    expect(courseDuration(courseData)).toBe(5447)
+    expect(formatDuration(6016)).toBe('100:16')
+    expect(courseDuration(courseData)).toBe(6016)
     expect(spokenDuration(450)).toBe('7 minutes 30 seconds')
     // Approximate (catalog target) lengths round to whole minutes with a "≈" mark.
     expect(durationLabel(441)).toBe('7:21')
     expect(durationLabel(480, true)).toBe('≈ 8 min')
     expect(spokenDurationLabel(480, true)).toBe('about 8 minutes')
-    expect(totalDurationLabel(courseData.episodes)).toBe('≈ 91 min')
-    expect(totalDurationLabel(courseData.episodes.slice(0, 2))).toBe('13:47')
+    expect(totalDurationLabel(courseData.episodes)).toBe('≈ 100 min')
+    expect(totalDurationLabel(courseData.episodes.slice(0, 1))).toBe('16:16')
   })
 
   it('keeps the furthest point, resumes mid-episode, and counts 90% as watched', () => {

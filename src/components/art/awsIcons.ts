@@ -15,6 +15,8 @@ export const AWS_ICONS: Record<AwsIconName, { src: string; name: string }> = {
   s3: { src: `${BASE}/service/Arch_Amazon-Simple-Storage-Service_64.svg`, name: 'Amazon S3' },
   cloudwatch: { src: `${BASE}/service/Arch_Amazon-CloudWatch_64.svg`, name: 'Amazon CloudWatch' },
   iam: { src: `${BASE}/service/Arch_AWS-Identity-and-Access-Management_64.svg`, name: 'AWS IAM' },
+  kms: { src: `${BASE}/service/Arch_AWS-Key-Management-Service_64.svg`, name: 'AWS KMS' },
+  apiGateway: { src: `${BASE}/service/Arch_Amazon-API-Gateway_64.svg`, name: 'Amazon API Gateway' },
   cli: { src: `${BASE}/service/Arch_AWS-Command-Line-Interface_64.svg`, name: 'AWS CLI' },
   cloudshell: { src: `${BASE}/service/Arch_AWS-CloudShell_64.svg`, name: 'AWS CloudShell' },
   lambdaFunction: { src: `${BASE}/resource/Res_AWS-Lambda_Lambda-Function_48.svg`, name: 'Lambda function' },

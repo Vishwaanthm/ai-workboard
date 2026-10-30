@@ -6,7 +6,7 @@ import { ANNOUNCEMENT_KEY, AnnouncementBar } from '@/components/AnnouncementBar'
 import { CopyCommand } from '@/components/home/CopyCommand'
 import { SmartLink } from '@/components/SmartLink'
 import { ModelStrip } from '@/components/home/ModelStrip'
-import { courseData, episodesInPart } from '@/data'
+import { courseData } from '@/data'
 import { home } from '@/data/home'
 import { dateOrTba } from '@/lib/useCopy'
 import { renderApp } from './helpers'
@@ -90,7 +90,7 @@ describe('announcement bar', () => {
 })
 
 describe('header mega-menu', () => {
-  it('opens the Course menu with the overview and every part, and Escape closes it and restores focus', async () => {
+  it('opens the Course menu with the overview and every episode, and Escape closes it and restores focus', async () => {
     const user = userEvent.setup()
     renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
@@ -102,12 +102,12 @@ describe('header mega-menu', () => {
     const panel = document.getElementById(trigger.getAttribute('aria-controls')!)!
     expect(panel).toBeInTheDocument()
     const links = within(panel).getAllByRole('link')
-    expect(links).toHaveLength(courseData.parts.length + 1)
+    expect(links).toHaveLength(courseData.episodes.length + 1)
     expect(links[0]).toHaveAttribute('href', '/course')
-    courseData.parts.forEach((part, i) => {
-      expect(links[i + 1]).toHaveAttribute('href', `/course#part-${part.id}`)
-      expect(links[i + 1]).toHaveAccessibleName(expect.stringContaining(part.title))
-      expect(links[i + 1]).toHaveAccessibleName(expect.stringContaining(part.outcome))
+    courseData.episodes.forEach((episode, i) => {
+      expect(links[i + 1]).toHaveAttribute('href', `/course#episode-${episode.id}`)
+      expect(links[i + 1]).toHaveAccessibleName(expect.stringContaining(episode.title))
+      expect(links[i + 1]).toHaveAccessibleName(expect.stringContaining(episode.summary))
     })
 
     // The panel follows its trigger in the tab order.
@@ -153,20 +153,20 @@ describe('header mega-menu', () => {
     expect(learn).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('following a part link navigates to the Course page and opens that part', async () => {
+  it('following an episode link navigates to the Course page and opens that episode', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/course')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
-    const part3 = document.getElementById('part-3')!
-    const part3Trigger = within(part3).getAllByRole('button')[0]!
-    expect(part3Trigger).toHaveAttribute('aria-expanded', 'false')
+    const ep3 = document.getElementById('episode-3')!
+    const ep3Trigger = within(ep3).getAllByRole('button')[0]!
+    expect(ep3Trigger).toHaveAttribute('aria-expanded', 'false')
 
     await user.click(screen.getByRole('button', { name: 'Course' }))
-    await user.click(screen.getByRole('link', { name: /Part 3/ }))
-    expect(router.state.location.hash).toBe('#part-3')
-    await waitFor(() => expect(part3Trigger).toHaveAttribute('aria-expanded', 'true'))
-    // The part opened before (part 1, the default) stays open.
-    expect(within(document.getElementById('part-1')!).getAllByRole('button')[0]).toHaveAttribute(
+    await user.click(screen.getByRole('link', { name: /^E03/ }))
+    expect(router.state.location.hash).toBe('#episode-3')
+    await waitFor(() => expect(ep3Trigger).toHaveAttribute('aria-expanded', 'true'))
+    // The episode opened before (E01, the default) stays open.
+    expect(within(document.getElementById('episode-1')!).getAllByRole('button')[0]).toHaveAttribute(
       'aria-expanded',
       'true',
     )
@@ -183,20 +183,20 @@ describe('header mega-menu', () => {
     await user.click(group)
     expect(group).toHaveAttribute('aria-expanded', 'true')
     expect(within(sheet).getByRole('link', { name: 'Course overview' })).toHaveAttribute('href', '/course')
-    expect(within(sheet).getByRole('link', { name: /Part 5/ })).toHaveAttribute('href', '/course#part-5')
+    expect(within(sheet).getByRole('link', { name: /E05/ })).toHaveAttribute('href', '/course#episode-5')
     // Existing links are still there.
     expect(within(sheet).getByRole('link', { name: 'Labs' })).toHaveAttribute('href', '/labs')
   })
 })
 
-describe('explore by part tabs', () => {
+describe('explore by episode tabs', () => {
   it('uses a roving tabindex and moves with the arrow, Home and End keys', async () => {
     const user = userEvent.setup()
     renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
-    const tablist = screen.getByRole('tablist', { name: 'Course parts' })
+    const tablist = screen.getByRole('tablist', { name: 'Course episodes' })
     const tabs = within(tablist).getAllByRole('tab')
-    expect(tabs).toHaveLength(courseData.parts.length)
+    expect(tabs).toHaveLength(courseData.episodes.length)
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
     expect(tabs.map((t) => t.getAttribute('tabindex'))).toEqual(['0', '-1', '-1', '-1', '-1'])
 
@@ -209,14 +209,11 @@ describe('explore by part tabs', () => {
 
     const panel = screen.getByRole('tabpanel')
     expect(panel).toHaveAttribute('aria-labelledby', tabs[1]!.id)
-    const part = courseData.parts[1]!
-    for (const ep of episodesInPart(courseData, part.id)) {
-      expect(within(panel).getByText(ep.title)).toBeInTheDocument()
-    }
-    expect(within(panel).getByRole('link', { name: `Go to Part ${part.id}` })).toHaveAttribute(
-      'href',
-      `/course#part-${part.id}`,
-    )
+    const episode = courseData.episodes[1]!
+    expect(within(panel).getByRole('heading', { level: 3, name: episode.title })).toBeInTheDocument()
+    expect(within(panel).getByText(episode.summary)).toBeInTheDocument()
+    for (const outcome of episode.outcomes) expect(within(panel).getByText(outcome)).toBeInTheDocument()
+    expect(within(panel).getByRole('link', { name: 'Go to E02' })).toHaveAttribute('href', '/course#episode-2')
     expect(within(panel).getByRole('button', { name: /^Copy: / })).toBeInTheDocument()
 
     await user.keyboard('{End}')
@@ -260,6 +257,21 @@ describe('model provider strip', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(PROVIDERS.length)
   })
 
+  it('shows brand marks only where a file exists, with the name always written', () => {
+    mockReducedMotion(true)
+    render(<ModelStrip providers={PROVIDERS} />)
+    const items = screen.getAllByRole('listitem')
+    PROVIDERS.forEach((p, i) => {
+      expect(items[i]).toHaveTextContent(p.name)
+      const mark = items[i]!.querySelector('[data-mark]')
+      if (p.mark) {
+        expect(mark).toHaveAttribute('aria-hidden', 'true')
+        expect(mark).toHaveAttribute('data-mark', p.mark)
+      } else expect(mark).toBeNull()
+      for (const model of p.models ?? []) expect(items[i]).toHaveTextContent(model)
+    })
+  })
+
   it('is static when the footer Background motion switch is off', () => {
     mockReducedMotion(false)
     window.localStorage.setItem('aiw.backgroundVideo', 'off')
@@ -272,13 +284,13 @@ describe('home placeholders', () => {
   it('only emits in-app paths and http(s) URLs as links', () => {
     render(
       <MemoryRouter>
-        <SmartLink href="/course#part-2">In app</SmartLink>
+        <SmartLink href="/course#episode-2">In app</SmartLink>
         <SmartLink href="https://example.com/post">Other site</SmartLink>
         <SmartLink href="javascript:alert(1)">Unsafe</SmartLink>
         <SmartLink href="data:text/html,hi">Data URL</SmartLink>
       </MemoryRouter>,
     )
-    expect(screen.getByRole('link', { name: 'In app' })).toHaveAttribute('href', '/course#part-2')
+    expect(screen.getByRole('link', { name: 'In app' })).toHaveAttribute('href', '/course#episode-2')
     const external = screen.getByRole('link', { name: /Other site/ })
     expect(external).toHaveAttribute('target', '_blank')
     expect(external).toHaveAttribute('rel', 'noopener noreferrer')
@@ -302,13 +314,30 @@ describe('home placeholders', () => {
     expect(dateOrTba('2026-11-30')).toBe('30 Nov 2026')
   })
 
+  it('shows the catalog analogy and one journey step per episode, linked to its lesson', async () => {
+    renderApp('/')
+    await screen.findByRole('heading', { level: 1, name: courseData.course.title })
+    const analogy = screen.getByRole('region', { name: home.analogy.title })
+    expect(within(analogy).getByText(home.analogy.quote)).toBeInTheDocument()
+    for (const item of home.analogy.items) expect(within(analogy).getByText(item.title)).toBeInTheDocument()
+    const journey = screen.getByRole('region', { name: home.journey.title })
+    const steps = within(journey).getAllByRole('listitem')
+    expect(steps).toHaveLength(courseData.episodes.length)
+    home.journey.steps.forEach((step, i) => {
+      const link = within(steps[i]!).getByRole('link')
+      expect(link).toHaveAttribute('href', `/learn/${step.episodeId}`)
+      expect(link).toHaveTextContent(step.text)
+    })
+  })
+
   it('renders every new home section without a testimonial', async () => {
     renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
     for (const name of [
+      'Bedrock is a restaurant',
       'Models on Amazon Bedrock',
-      'Explore by part',
-      "What you'll build",
+      'Explore by episode',
+      "Priya's dinner-idea app",
       'Learning hub',
       'Ready when you are',
     ]) {

@@ -39,7 +39,7 @@ export const labs: Lab[] = [
   },
   {
     id: 'lab-2',
-    episodeId: 10,
+    episodeId: 5,
     title: 'Lab 2 title',
     tags: ['Tag 1'],
     services: ['lambda', 'iam', 'bedrock'],

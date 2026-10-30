@@ -33,6 +33,11 @@ export function SiteFooter() {
             Amazon Web Services, AWS and Amazon Bedrock are trademarks of Amazon.com, Inc. or its affiliates.
             AI Workboard is not affiliated with or endorsed by AWS.
           </p>
+          <p className="mt-3 text-sm text-on-ink-muted">
+            Anthropic, Meta, Mistral AI, DeepSeek, Stability AI, Cohere and Luma names and marks belong to their
+            owners and are shown only to identify their models. AI Workboard is not affiliated with or endorsed by
+            them. Brand marks: Simple Icons (CC0).
+          </p>
           <p className="mt-3 text-sm text-on-ink-muted">© 2026 AI Workboard</p>
           <BackgroundMotionToggle />
         </div>

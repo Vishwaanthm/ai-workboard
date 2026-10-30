@@ -2,22 +2,19 @@ import { ArrowRight, FlaskConical } from 'lucide-react'
 import { Link } from 'react-router'
 import { LabServiceIcons } from '@/components/art/LabServiceIcons'
 import { LabStatusLabel } from '@/components/LabStatusLabel'
-import { coverFor, PART_COVERS } from '@/components/media/partCovers'
+import { coverFor, LABS_COVER } from '@/components/media/covers'
 import { Container } from '@/components/misc'
 import { PageBand } from '@/components/PageBand'
 import { Callout } from '@/components/ui/callout'
-import { getEpisode } from '@/data'
 import { useAppState } from '@/context/useAppState'
 import { labStatus, labStepCount } from '@/lib/progress'
 import { cn, plural } from '@/lib/utils'
+import { episodeLabel } from '@/lib/watch'
 
 export default function LabsPage() {
   const { data, user, progress } = useAppState()
-  const groups = data.parts
-    .map((part) => ({
-      part,
-      labs: data.labs.filter((lab) => getEpisode(data, lab.episodeId)?.partId === part.id),
-    }))
+  const groups = data.episodes
+    .map((episode) => ({ episode, labs: data.labs.filter((lab) => lab.episodeId === episode.id) }))
     .filter((g) => g.labs.length > 0)
 
   return (
@@ -25,9 +22,9 @@ export default function LabsPage() {
       <PageBand
         title="Labs"
         eyebrow="Hands-on practice"
-        cover={PART_COVERS.forest}
-        accent="bg-theme-forest"
-        figure={PART_COVERS.forest}
+        cover={LABS_COVER}
+        accent={LABS_COVER.accent}
+        figure={LABS_COVER}
         lede={`${plural(data.labs.length, 'guided lab')}. Tick off each step as you go; your progress is saved in this browser.`}
       >
         {!user ? (
@@ -47,20 +44,19 @@ export default function LabsPage() {
           </Callout>
         ) : (
           <div className="flex flex-col gap-14">
-            {groups.map(({ part, labs }) => {
-              const cover = coverFor(part)
+            {groups.map(({ episode: group, labs }) => {
+              const cover = coverFor(group)
               return (
-                <section key={part.id} aria-labelledby={`labs-part-${part.id}`}>
+                <section key={group.id} aria-labelledby={`labs-episode-${group.id}`}>
                   <p className="flex items-center gap-3 font-mono text-sm font-semibold text-muted-foreground">
                     <span aria-hidden="true" className={cn('h-1 w-8 rounded-full', cover.accent)} />
-                    Part {part.id}
+                    {episodeLabel(group.number)}
                   </p>
-                  <h2 id={`labs-part-${part.id}`} className="mt-2 text-[28px] leading-[1.05] md:text-[36px]">
-                    {part.title}
+                  <h2 id={`labs-episode-${group.id}`} className="mt-2 text-[28px] leading-[1.05] md:text-[36px]">
+                    {group.title}
                   </h2>
                   <ul className="mt-6 flex flex-col gap-4">
                     {labs.map((lab) => {
-                      const episode = getEpisode(data, lab.episodeId)
                       const done = labStepCount(progress, lab.id)
                       return (
                         <li key={lab.id}>
@@ -74,7 +70,6 @@ export default function LabsPage() {
                               <span>
                                 <span className="block font-display text-lg font-bold">{lab.title}</span>
                                 <span className="block text-sm text-muted-foreground">
-                                  {episode ? `${episode.title}, ` : ''}
                                   {plural(lab.steps.length, 'step')}
                                 </span>
                               </span>

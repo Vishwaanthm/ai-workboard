@@ -1,5 +1,5 @@
 /** Pure progress rules. Nothing here touches storage or React. */
-import { coreEpisodes, finalQuiz, getEpisode, episodesInPart, partQuizzes, quizForPart } from '@/data'
+import { coreEpisodes, episodeQuizzes, finalQuiz, quizForEpisode } from '@/data'
 import type { CourseData, Episode, Quiz } from '@/data/types'
 import { isPassingScore, type CertificateRecord, type Progress } from './schema'
 
@@ -66,13 +66,13 @@ export function isQuizPassed(p: Progress, quizId: string): boolean {
   return p.quizzes[quizId]?.passed ?? false
 }
 
-/** Part quizzes the learner still has to pass before the final unlocks. */
+/** Episode quizzes the learner still has to pass before the final unlocks. */
 export function quizzesBlockingFinal(p: Progress, data: CourseData): Quiz[] {
-  return partQuizzes(data).filter((q) => !isQuizPassed(p, q.id))
+  return episodeQuizzes(data).filter((q) => !isQuizPassed(p, q.id))
 }
 
 export function isQuizUnlocked(p: Progress, data: CourseData, quiz: Quiz): boolean {
-  return quiz.partId !== 'final' || quizzesBlockingFinal(p, data).length === 0
+  return quiz.episodeId !== 'final' || quizzesBlockingFinal(p, data).length === 0
 }
 
 export type Requirement =
@@ -86,7 +86,7 @@ export function certificateEligibility(p: Progress, data: CourseData): Requireme
   for (const m of coreEpisodes(data)) {
     if (!isEpisodeComplete(p, m.id)) unmet.push({ kind: 'episode', episode: m })
   }
-  for (const q of partQuizzes(data)) {
+  for (const q of episodeQuizzes(data)) {
     if (!isQuizPassed(p, q.id)) unmet.push({ kind: 'quiz', quiz: q })
   }
   const final = finalQuiz(data)
@@ -111,13 +111,14 @@ export type NextStep =
   | { kind: 'done' }
 
 export function nextStep(p: Progress, data: CourseData): NextStep {
-  for (const part of data.parts) {
-    if (part.optional) continue
-    const pending = episodesInPart(data, part.id).find((m) => !m.optional && !isEpisodeComplete(p, m.id))
-    if (pending) return { kind: 'episode', episode: pending }
-    const quiz = quizForPart(data, part.id)
+  for (const episode of coreEpisodes(data)) {
+    if (!isEpisodeComplete(p, episode.id)) return { kind: 'episode', episode }
+    const quiz = quizForEpisode(data, episode.id)
     if (quiz && !isQuizPassed(p, quiz.id)) return { kind: 'quiz', quiz }
   }
+  // Quizzes attached to optional episodes still block the final, so offer any left over.
+  const blocking = quizzesBlockingFinal(p, data)[0]
+  if (blocking) return { kind: 'quiz', quiz: blocking }
   const final = finalQuiz(data)
   if (final && !isQuizPassed(p, final.id)) return { kind: 'final', quiz: final }
   if (!visibleCertificate(p, data)) return { kind: 'certificate' }
@@ -147,14 +148,6 @@ export function episodeNeighbours(
     previous: index > 0 ? data.episodes[index - 1] : undefined,
     next: index >= 0 && index < data.episodes.length - 1 ? data.episodes[index + 1] : undefined,
   }
-}
-
-/** True when this episode is the last one of its part. */
-export function isLastInPart(data: CourseData, episodeId: number): boolean {
-  const m = getEpisode(data, episodeId)
-  if (!m) return false
-  const inPart = episodesInPart(data, m.partId)
-  return inPart[inPart.length - 1]?.id === m.id
 }
 
 /** Where the main call to action goes for a signed-in learner. */

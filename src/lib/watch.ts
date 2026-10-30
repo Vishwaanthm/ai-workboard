@@ -53,12 +53,20 @@ export function totalDurationLabel(episodes: Episode[]): string {
   return durationLabel(total, episodes.some((e) => e.durationApprox))
 }
 
-export function partDuration(data: CourseData, partId: number): number {
-  return data.episodes.filter((e) => e.partId === partId).reduce((sum, e) => sum + e.durationSec, 0)
-}
-
 export function courseDuration(data: CourseData): number {
   return data.episodes.reduce((sum, e) => sum + e.durationSec, 0)
+}
+
+/** Chapters with start times, for seeking; empty while any chapter has no time yet (the list is then static). */
+export function timedChapters(episode: Episode): { t: number; label: string }[] {
+  const chapters = episode.chapters ?? []
+  if (chapters.some((c) => c.t === undefined)) return []
+  return chapters.map((c) => ({ t: c.t ?? 0, label: c.label }))
+}
+
+/** True when the lesson page should list the chapters itself (no player chapter list to seek with). */
+export function needsStaticChapters(episode: Episode): boolean {
+  return (episode.chapters?.length ?? 0) > 0 && (!hasVideo(episode) || timedChapters(episode).length === 0)
 }
 
 export function availableLangs(episode: Episode): Lang[] {

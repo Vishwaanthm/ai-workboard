@@ -7,8 +7,12 @@ tokens only. Anything not listed here is not allowed in components.
 ## Direction
 
 Cinematic ink surfaces with real imagery (a real-time WebGL field on Home, photos elsewhere) for every page header, paper reading
-surfaces for learning content, and one electric volt-lime signal colour. Each course part carries a
+surfaces for learning content, and one electric volt-lime signal colour. Each course episode carries a
 catalog accent and a cover photo. Bold display type, a calm text face, a mono for labels and code.
+
+Course structure (2026-10-30, catalog v2): a flat list of 5 video episodes (E01 to E05), each split into
+4 chapters. There are no parts. The running restaurant analogy and Priya's dinner-idea app (both from the
+catalog) shape the Home page and the imagery.
 
 - Design read: video course platform (marketing home plus learning app) for AWS beginners; creative,
   bold, premium, professional.
@@ -58,12 +62,13 @@ Volt is never used as text on paper (1.3:1 on white). On paper the volt role is 
 (lime-800) for text and by volt only as a non-text stripe (enrol card, certificate, CTA band background
 with ink text).
 
-### Part accents (catalog themes)
+### Episode accents (catalog themes)
 
-`theme-ocean #38BDF8`, `theme-midnight #A5B4FC`, `theme-sunrise #FB923C`, `theme-slate #CBD5E1`,
-`theme-forest #4ADE80`, `theme-aurora #5EEAD4`. Decorative only (accent bars, spine segments, cover
-underlines), never text and never the only signal: the part number and title are always written next
-to them. Part 1 to 5 use ocean, midnight, sunrise, slate, forest; aurora (E12's theme) is unused.
+`theme-glass #67E8F9` (cool ice cyan, added 2026-10-30 for E01's "glass" theme), `theme-midnight #A5B4FC`,
+`theme-sunrise #FB923C`, `theme-slate #CBD5E1`, `theme-forest #4ADE80`. Decorative only (accent bars,
+spine segments, cover underlines), never text and never the only signal: the episode code (E01) and
+title are always written next to them. E01 to E05 use glass, midnight, sunrise, slate, forest. (The
+ocean and aurora tokens were removed with the parts; the hero shader keeps its own fixed colours.)
 
 ### Ink scope
 
@@ -103,18 +108,22 @@ Course instructor panel, the Dashboard certificate panel and the auth image pane
 | Meta, eyebrows, episode codes, durations | Geist Mono | 12-14px | 400-600 | 0 |
 
 Self-hosted via `@fontsource-variable/*`. Body min 16px, meta min 14px (12px only for the course
-spine part labels and the lesson sidebar codes, which repeat visible information). Reading width
+spine episode labels and the lesson sidebar codes, which repeat visible information). Reading width
 max 68ch. No em or en dashes in visible strings. Eyebrows: Home hero uses one uppercase tracked line;
-page bands use a mono eyebrow with the part accent bar.
+page bands use a mono eyebrow with the episode accent bar.
 
 ## Imagery and page bands
 
 - Every page opens with an ink band (`src/components/PageBand.tsx`): cover photo, `band-scrim`, mono
   eyebrow with accent bar, h1, lede, free slot; optional framed cover window on large screens.
-  Course, Dashboard, Certificate and 404 (and the auth panel) use the hero field still (`hero-field-*.webp`); Labs uses the Building cover; Lab and
-  Quiz use their part's cover. The lesson page uses an ink "theater" around the player with the part
-  cover at 40% under the same scrim. Login and Register use a split layout (`AuthShell`).
-- Part covers (Pixabay, CREDITS.md): 640 and 1280 WebP, `srcset`, lazy except in bands.
+  Course, Dashboard, Certificate and 404 (and the auth panel) use the hero field still (`hero-field-*.webp`); Labs uses the E05 code cover; Lab and
+  Quiz use their episode's cover. The lesson page uses an ink "theater" around the player with the
+  episode cover at 40% under the same scrim. Login and Register use a split layout (`AuthShell`).
+- Episode covers follow the restaurant analogy (Pixabay, CREDITS.md; `src/components/media/covers.ts`):
+  E01 restaurant entrance ("one door"), E02 hands typing (talking to a model), E03 a plated dish (dish
+  photos), E04 a padlock on a laptop (the guardrail), E05 code on a screen. Home adds a working kitchen
+  (analogy) and five plated dishes (Priya's app). No identifiable faces as focal points. 640 and 1280
+  WebP, `srcset`, lazy except in bands; content photos with meaning carry alt text, decorative ones `alt=""`.
 - Scrims (worst case = text over a pure-white image pixel; the Home hero is measured instead, see below):
 
 | Surface | Scrim (ink alpha in the text zone) | on-ink | on-ink-muted | volt |
@@ -134,7 +143,7 @@ Layers, back to front: real-time field canvas (`HeroField`, drawn by `heroFieldG
   opaque canvas, two passes. Sky: ink gradient, aurora ribbons in ocean, forest and midnight above the
   horizon, a thin sunrise line on the horizon, sparse one-pixel stars, dithering against banding.
   Field: a perspective grid of soft points and 1px ridgelines (additive), displaced by flowing simplex
-  noise that drifts toward the viewer; tinted by the part accents, crests brighter; about one row in
+  noise that drifts toward the viewer; tinted by the theme accents, crests brighter; about one row in
   nine carries a volt "data packet" with a tail. Portrait screens look down more steeply so the field
   fills the space above the copy.
 - Fine pointer: the field rises into a lit volt bulge with slow rings under the cursor (ground-plane
@@ -171,7 +180,7 @@ Layers, back to front: real-time field canvas (`HeroField`, drawn by `heroFieldG
 | `--duration-exit` | 150ms | Sheet/dialog exit |
 | `--duration-slow` | 320ms | Progress bar fill |
 | `--duration-reveal` | 520ms | Scroll reveal (opacity, 12px rise, 4px blur) |
-| `--duration-draw` | 900ms | Hub diagram draw-in (once, no loop) |
+| `--duration-draw` | 900ms | Reserved (the hub diagram draw-in was removed 2026-10-30) |
 | `--duration-ring` | 700ms | Progress ring fill |
 | hero rise | 700ms, 80ms stagger | Hero copy entrance |
 
@@ -183,16 +192,18 @@ canvas animate. The global reduced-motion rule sets every CSS duration to 0.01ms
 ## Home sections (Strands-style patterns, 2026-10-29)
 
 Section patterns borrowed from strandsagents.com, drawn in this system (no Strands text, logos,
-names, images or testimonials). Placeholder copy lives in `src/data/home.ts` (`HomeSections`); part
-names, outcomes and episodes always come from `course.ts`.
+names, images or testimonials). Home copy lives in `src/data/home.ts` (`HomeSections`): the analogy,
+journey and providers in the catalog's own words, the rest still placeholder; episode titles, Covers
+lines, outcomes and chapters always come from `course.ts`.
 
 | Section | Where | Surface and tokens | Motion |
 | --- | --- | --- | --- |
 | Announcement bar | Above the header, every page (`AnnouncementBar`) | `volt` band, ink text 14.50, ink focus ring; dismiss button 44px | none |
-| Course / Learn menus | Header (`nav/NavMenu.tsx`); mobile sheet groups | Panel `ink-raised`, `ink-line` border, `shadow-lift`; part accent bar beside "Part N" | 160ms fade + 4px rise from the trigger |
-| Model provider strip | Home, after the hub diagram, ink | Text chips `ink-raised` + volt dot, display 18-20px | 40s linear marquee, pauses on hover/focus; static wrap when reduced or switch off |
-| Explore by part | Home, paper | Tabs: selected = ink fill, others card; panel card + `CodeBlock` | panel rise-in (200ms) on change |
-| What you'll build | Home, ink | Cards `ink-raised`, volt link line, optional AWS service icon with its name | Reveal + 2px lift |
+| Course / Learn menus | Header (`nav/NavMenu.tsx`); mobile sheet groups | Panel `ink-raised`, `ink-line` border, `shadow-lift`; episode accent bar beside "E0N" | 160ms fade + 4px rise from the trigger |
+| Bedrock is a restaurant | Home, ink, after the episode bento | Kitchen photo in an `ink-line` frame; catalog sentence; 6 rows with lucide icons (door, menu, chef hat, receipt, shield, pot) in volt on `ink-raised` tiles | Reveal |
+| Model provider strip | Home, after the analogy, ink | Chips `ink-raised`: monochrome Simple Icons mark (CSS mask in the text colour) or the Amazon Nova icon or a volt dot, display name 18-20px, catalog model names in `on-ink-muted` | 40s linear marquee, pauses on hover/focus; static wrap when reduced or switch off |
+| Explore by episode | Home, paper | Tabs (E01 to E05): selected = ink fill, others card; panel: Covers, outcomes, chapters, AWS icons with names, `CodeBlock` | panel rise-in (200ms) on change |
+| Priya's dinner-idea app | Home, ink | Header + plated-dishes photo; numbered path (vertical on mobile, 5 across on desktop), step cards `ink-raised` with episode accent, catalog step text, AWS icons (alt = service name), volt episode link | Reveal + 2px lift |
 | Learning hub | Home, paper | Card panel + ink-scope events column; dates "TBA" when missing | Reveal |
 | Closing command | Volt CTA band | Ink pill, volt `$`, copy button | none |
 
@@ -215,8 +226,22 @@ The certificate prints on one A4 landscape page (`@page size: A4 landscape`, 250
 the header, footer, band and buttons hidden (`no-print`) and the volt top stripe kept
 (`print-color-adjust: exact`).
 
+## Lesson page: episode guide and Check yourself
+
+Under the progress bar: "In this episode" (h2) with "You will be able to" (catalog outcomes, progress
+check icons), the episode's AWS services (official icons with names) and, while chapters have no start
+times or there is no video, a static numbered chapter list (the player lists seekable chapters once
+times exist). Then the "Check yourself" card: card surface, `progress` left bar, mono label, the
+catalog's question in display 22px, a secondary "Reveal answer" button (`aria-expanded` /
+`aria-controls`, 44px) and a `primary-soft` answer panel that is `hidden` until revealed (200ms rise-in,
+none under reduced motion). One question, one answer: no invented options.
+
 ## Iconography and AWS assets
 
 lucide-react, `strokeWidth 1.75`, 16/20/24px; decorative icons `aria-hidden`. Official AWS
-Architecture Icons (`public/aws-icons/`) unmodified for services on lab cards and the hub diagram; the
-two AWS group colours (`#242F3E`, `#00A4A6`) are allowed only inside the hub diagram frames. No emoji.
+Architecture Icons (`public/aws-icons/`) unmodified for services on lab cards, the episode guide, the
+Explore panels, the journey steps and the Amazon chip (the hub diagram was removed on 2026-10-30, so the
+AWS group colours are no longer used). Per episode: E01 Bedrock; E02 Bedrock, Nova; E03 Nova, S3; E04
+Bedrock, IAM; E05 Lambda, API Gateway, CloudWatch, S3. Provider brand marks (`public/brand-marks/`,
+Simple Icons CC0 files, trademarks of their owners) appear only in the model strip beside the written
+name, unmodified in shape, in one flat colour; providers without a Simple Icons mark stay text. No emoji.

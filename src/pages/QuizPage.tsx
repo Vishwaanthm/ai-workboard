@@ -1,17 +1,18 @@
 import { ArrowRight, CheckCircle2, Lock, RotateCcw, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
-import { COURSE_COVER, coverFor } from '@/components/media/partCovers'
+import { COURSE_COVER, coverFor } from '@/components/media/covers'
 import { Container, NotFound } from '@/components/misc'
 import { PageBand } from '@/components/PageBand'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
-import { finalQuiz, getEpisode, getPart, getQuiz } from '@/data'
+import { finalQuiz, getEpisode, getQuiz } from '@/data'
 import type { Quiz } from '@/data/types'
 import { useAppState } from '@/context/useAppState'
 import { isEligible, isQuizUnlocked, quizzesBlockingFinal } from '@/lib/progress'
 import { isPassingScore, passMarkOf } from '@/lib/schema'
 import { cn } from '@/lib/utils'
+import { episodeLabel } from '@/lib/watch'
 
 function percent(n: number): string {
   return `${Math.round(n * 100)}%`
@@ -82,7 +83,7 @@ function QuizForm({ quiz }: { quiz: Quiz }) {
               <RotateCcw aria-hidden="true" strokeWidth={1.75} />
               Retake quiz
             </Button>
-            {passed && quiz.partId !== 'final' && final && isQuizUnlocked(progress, data, final) ? (
+            {passed && quiz.episodeId !== 'final' && final && isQuizUnlocked(progress, data, final) ? (
               <Button asChild>
                 <Link to={`/quiz/${final.id}`}>
                   Take the {final.title}
@@ -90,7 +91,7 @@ function QuizForm({ quiz }: { quiz: Quiz }) {
                 </Link>
               </Button>
             ) : null}
-            {passed && quiz.partId === 'final' ? (
+            {passed && quiz.episodeId === 'final' ? (
               <Button asChild>
                 <Link to="/certificate">
                   {isEligible(progress, data) ? 'Get your certificate' : 'See what is left for your certificate'}
@@ -206,11 +207,11 @@ export default function QuizPage() {
   const quiz = quizId ? getQuiz(data, quizId) : undefined
   if (!quiz) return <NotFound />
 
-  const part = quiz.partId === 'final' ? undefined : getPart(data, quiz.partId)
+  const episode = quiz.episodeId === 'final' ? undefined : getEpisode(data, quiz.episodeId)
   const unlocked = isQuizUnlocked(progress, data, quiz)
   const blocking = quizzesBlockingFinal(progress, data)
 
-  const cover = part ? coverFor(part) : undefined
+  const cover = episode ? coverFor(episode) : undefined
 
   return (
     <>
@@ -218,14 +219,14 @@ export default function QuizPage() {
         title={quiz.title}
         cover={cover ?? COURSE_COVER}
         accent={cover?.accent}
-        eyebrow={part ? `Part ${part.id}: ${part.title}` : 'Final assessment'}
+        eyebrow={episode ? `${episodeLabel(episode.number)}: ${episode.title}` : 'Final assessment'}
       />
     <Container className="py-10 md:py-14">
       <div className="max-w-3xl">
         {unlocked ? (
           <QuizForm key={quiz.id} quiz={quiz} />
         ) : (
-          <Callout tone="info" title="Locked until you pass every part quiz">
+          <Callout tone="info" title="Locked until you pass every episode quiz">
             <p>Pass these first:</p>
             <ul className="mt-2 flex flex-col">
               {blocking.map((q) => (

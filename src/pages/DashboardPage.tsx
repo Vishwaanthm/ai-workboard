@@ -1,16 +1,15 @@
-import { ArrowRight, Award, CheckCircle2, Circle, CircleDashed, Lock, RotateCcw, XCircle } from 'lucide-react'
+import { ArrowRight, Award, CheckCircle2, Circle, CircleDashed, Lock, RotateCcw } from 'lucide-react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { LabStatusLabel } from '@/components/LabStatusLabel'
 import { ProgressRing } from '@/components/art/ProgressRing'
-import { COURSE_COVER, coverFor } from '@/components/media/partCovers'
+import { COURSE_COVER, coverFor } from '@/components/media/covers'
 import { Container } from '@/components/misc'
 import { PageBand } from '@/components/PageBand'
 import { ConfirmDialog } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import { ContinueWatching } from '@/components/video/ContinueWatching'
-import { firstLesson, getPart, isOptionalEpisode, episodesInPart, quizForPart } from '@/data'
+import { firstLesson, isOptionalEpisode, quizForEpisode } from '@/data'
 import { useAppState } from '@/context/useAppState'
 import {
   certificateEligibility,
@@ -49,7 +48,7 @@ export default function DashboardPage() {
 
   const started = hasAnyProgress(progress)
   const { done, total } = coreProgress(progress, data)
-  const optional = data.episodes.filter((m) => isOptionalEpisode(data, m))
+  const optional = data.episodes.filter((m) => isOptionalEpisode(m))
   const optionalDone = optional.filter((m) => isEpisodeComplete(progress, m.id)).length
   const step = nextStep(progress, data)
   const stepText = nextStepText(step)
@@ -123,7 +122,9 @@ export default function DashboardPage() {
         </p>
         <ol className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {data.episodes.map((e) => {
-            const accent = coverFor(getPart(data, e.partId)).accent
+            const accent = coverFor(e).accent
+            const quiz = quizForEpisode(data, e.id)
+            const quizPassed = quiz ? (progress.quizzes[quiz.id]?.passed ?? false) : false
             const state = watchState(progress, e)
             const pct = Math.round(watchRatio(progress, e) * 100)
             return (
@@ -145,6 +146,7 @@ export default function DashboardPage() {
                     <span className="block truncate font-medium">{e.title}</span>
                     <span className="block text-sm text-muted-foreground">
                       {state === 'watched' ? 'Watched' : state === 'partly' ? `${pct}% watched` : 'Not started'}
+                      {quiz ? `, quiz ${quizPassed ? 'passed' : 'not passed yet'}` : ''}
                     </span>
                   </span>
                   <span className="shrink-0 font-mono text-sm text-muted-foreground">
@@ -159,62 +161,6 @@ export default function DashboardPage() {
       </section>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
-        <section aria-labelledby="parts-heading">
-          <h2 id="parts-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
-            Parts
-          </h2>
-          <ul className="mt-4 flex flex-col gap-3">
-            {data.parts.map((part) => {
-              const mods = episodesInPart(data, part.id)
-              const partDone = mods.filter((m) => isEpisodeComplete(progress, m.id)).length
-              const quiz = quizForPart(data, part.id)
-              const quizPassed = quiz ? (progress.quizzes[quiz.id]?.passed ?? false) : false
-              const cover = coverFor(part)
-              return (
-                <li key={part.id} className="flex gap-4 rounded-panel border border-border bg-card p-4 shadow-raised">
-                  <span
-                    aria-hidden="true"
-                    className="relative hidden aspect-square w-16 shrink-0 overflow-hidden rounded-control sm:block"
-                  >
-                    <img
-                      src={cover.src}
-                      srcSet={cover.srcSet}
-                      sizes="64px"
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="size-full object-cover"
-                    />
-                    <span className={cn('absolute inset-x-0 bottom-0 h-1', cover.accent)} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2">
-                    <Link to={`/course#part-${part.id}`} className="link inline-flex min-h-11 items-center">
-                      {part.title}
-                      {part.optional ? ' (optional)' : ''}
-                    </Link>
-                    <span className="text-sm text-muted-foreground">
-                      {partDone} of {plural(mods.length, 'episode')}
-                    </span>
-                  </div>
-                  <Progress value={partDone} max={mods.length} label={`${part.title} episodes complete`} className="mt-3" />
-                  {quiz ? (
-                    <p className="mt-2 flex items-center gap-1.5 text-sm">
-                      {quizPassed ? (
-                        <CheckCircle2 aria-hidden="true" strokeWidth={1.75} className="size-4 text-progress" />
-                      ) : (
-                        <XCircle aria-hidden="true" strokeWidth={1.75} className="size-4 text-muted-foreground" />
-                      )}
-                      {quiz.title}: {quizPassed ? 'passed' : 'not passed yet'}
-                    </p>
-                  ) : null}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-
         <section aria-labelledby="quiz-heading">
           <h2 id="quiz-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
             Quiz scores
@@ -275,34 +221,34 @@ export default function DashboardPage() {
             </table>
           </div>
         </section>
-      </div>
 
-      <section aria-labelledby="labs-heading" className="mt-10">
-        <h2 id="labs-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
-          Labs
-        </h2>
-        {data.labs.length === 0 ? (
-          <p className="mt-3 text-muted-foreground">No labs have been published yet.</p>
-        ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {data.labs.map((lab) => (
-              <li key={lab.id}>
-                <Link
-                  to={`/labs/${lab.id}`}
-                  className="card-lift flex h-full flex-col gap-2 rounded-panel border border-border bg-card p-4 hover:border-foreground"
-                >
-                  <span className="font-semibold">{lab.title}</span>
-                  <LabStatusLabel
-                    status={labStatus(progress, lab.id, lab.steps.length)}
-                    done={labStepCount(progress, lab.id)}
-                    total={lab.steps.length}
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <section aria-labelledby="labs-heading">
+          <h2 id="labs-heading" className="text-[26px] leading-[1.1] md:text-[32px]">
+            Labs
+          </h2>
+          {data.labs.length === 0 ? (
+            <p className="mt-3 text-muted-foreground">No labs have been published yet.</p>
+          ) : (
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {data.labs.map((lab) => (
+                <li key={lab.id}>
+                  <Link
+                    to={`/labs/${lab.id}`}
+                    className="card-lift flex h-full flex-col gap-2 rounded-panel border border-border bg-card p-4 hover:border-foreground"
+                  >
+                    <span className="font-semibold">{lab.title}</span>
+                    <LabStatusLabel
+                      status={labStatus(progress, lab.id, lab.steps.length)}
+                      done={labStepCount(progress, lab.id)}
+                      total={lab.steps.length}
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
       <section aria-labelledby="cert-heading" className="mt-10">
         <h2 id="cert-heading" className="text-[26px] leading-[1.1] md:text-[32px]">

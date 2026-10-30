@@ -1,22 +1,26 @@
 /*
- * TODO(content): PLACEHOLDER COPY. Replace every "goes here" string, snippet, card, post and event.
+ * TODO(content): PARTLY PLACEHOLDER COPY. The analogy, the journey and the model providers follow the
+ * production catalog (docs/catalog-v2.md); every "goes here" string is still a placeholder.
  *
- * Home page sections added in the Strands-style update: the announcement bar (every page), "Explore by
- * part" code panels, the model provider strip, "What you'll build" cards, the learning hub and the
- * closing command. Part names, part outcomes and episode titles are NOT written here: those sections read
- * them from course.ts. The course content itself is the videos; keep these strings to short labels.
+ * Home page sections: the announcement bar (every page), the "Bedrock is a restaurant" analogy, the model
+ * provider strip, "Explore by episode" code panels, Priya's journey, the learning hub and the closing
+ * command. Episode titles, "Covers" lines, outcomes and chapters are NOT written here: those sections read
+ * them from course.ts. The course content itself is the videos; keep these strings to short labels and the
+ * catalog's own words.
  *
  * Shape: HomeSections (src/data/types.ts)
  *   announcement      { id, text, link?{label, href} } or null to hide the bar. A new id re-shows it.
  *   learnMenu         { labs, dashboard, certificate }  one line each under the header Learn menu links
- *   explore.snippets  [{ partId, label, lang, code }]  one code panel per part (a part without one shows none)
- *   models.providers  provider names, plain text (no logos)
- *   useCases.items    [{ id, partId, title, text, service?, href? }]  service: AwsIconName in types.ts
+ *   explore.snippets  [{ episodeId, label, lang, code }]  one code panel per episode (none shows no panel)
+ *   models.providers  [{ name, models?[], mark?, service? }]  mark: Simple Icons file in public/brand-marks/;
+ *                     service: an official AWS icon (AwsIconName) for Amazon's own models
+ *   analogy           { title, quote, items[{ id, icon, title, meaning? }] }  icon: AnalogyIcon in types.ts
+ *   journey           { title, lede, steps[{ episodeId, text }] }  one step per episode
  *   hub               { lede, cta{label, href}, posts[{ id, kind, title, text, date?, href? }],
  *                       events[{ id, title, date?, location, href? }] }  missing date shows "TBA"
  *   closingCommand    { label, code } or null
  *
- * Links: a path starting with "/" opens in the app (for example "/course#part-2"); an http(s):// URL
+ * Links: a path starting with "/" opens in the app (for example "/course#episode-2"); an http(s):// URL
  * opens the other site in a new tab. Anything else (for example "javascript:") is shown as plain text.
  */
 import type { HomeSections } from './types'
@@ -36,38 +40,59 @@ export const home: HomeSections = {
     certificate: 'Certificate menu line goes here.',
   },
   explore: {
-    lede: 'Explore by part intro goes here. One sentence.',
-    snippets: [1, 2, 3, 4, 5].map((partId) => ({
-      partId,
-      label: `part-${partId}-snippet.txt`,
+    lede: 'Explore by episode intro goes here. One sentence.',
+    snippets: [1, 2, 3, 4, 5].map((episodeId) => ({
+      episodeId,
+      label: `e0${episodeId}-snippet.txt`,
       lang: 'text' as const,
-      code: `Part ${partId} snippet goes here.\nReplace it in src/data/home.ts.`,
+      code: `E0${episodeId} snippet goes here.\nReplace it in src/data/home.ts.`,
     })),
   },
   models: {
     lede: 'Model strip intro goes here. One sentence.',
-    providers: ['Amazon', 'Anthropic', 'Meta', 'Mistral AI', 'Cohere', 'DeepSeek', 'Stability AI', 'Luma AI', 'Writer'],
+    providers: [
+      { name: 'Amazon', models: ['Nova Canvas', 'Nova Reel'], service: 'nova' },
+      { name: 'Anthropic', mark: 'anthropic' },
+      { name: 'Meta', mark: 'meta' },
+      { name: 'Mistral', mark: 'mistral' },
+      { name: 'DeepSeek', mark: 'deepseek' },
+      { name: 'Stability AI' },
+      { name: 'Cohere' },
+      { name: 'Luma', models: ['Ray'] },
+    ],
   },
-  useCases: {
-    lede: 'What you will build intro goes here. One sentence.',
+  analogy: {
+    title: 'Bedrock is a restaurant',
+    quote:
+      'One door, one menu, many chefs (the models), and you pay per dish (tokens). The restaurant manager is the guardrail, checking every order in and every plate out. The back kitchen holds knowledge bases, agents and custom models.',
     items: [
+      { id: 'door', icon: 'door', title: 'One door' },
+      { id: 'menu', icon: 'menu', title: 'One menu' },
+      { id: 'chefs', icon: 'chef', title: 'Many chefs', meaning: 'The models' },
+      { id: 'dish', icon: 'dish', title: 'Pay per dish', meaning: 'Tokens' },
       {
-        id: 'use-case-1',
-        partId: 1,
-        title: 'Use case 1 title goes here',
-        text: 'Use case 1 description goes here.',
-        service: 'bedrock',
+        id: 'manager',
+        icon: 'manager',
+        title: 'The restaurant manager',
+        meaning: 'The guardrail, checking every order in and every plate out',
       },
-      { id: 'use-case-2', partId: 2, title: 'Use case 2 title goes here', text: 'Use case 2 description goes here.' },
-      { id: 'use-case-3', partId: 3, title: 'Use case 3 title goes here', text: 'Use case 3 description goes here.' },
-      { id: 'use-case-4', partId: 4, title: 'Use case 4 title goes here', text: 'Use case 4 description goes here.' },
       {
-        id: 'use-case-5',
-        partId: 5,
-        title: 'Use case 5 title goes here',
-        text: 'Use case 5 description goes here.',
-        service: 'lambda',
+        id: 'kitchen',
+        icon: 'kitchen',
+        title: 'The back kitchen',
+        meaning: 'Knowledge bases, agents and custom models',
       },
+    ],
+  },
+  journey: {
+    title: "Priya's dinner-idea app",
+    lede: 'Priya builds a dinner-idea app, one step per episode.',
+    steps: [
+      { episodeId: 1, text: 'Picks Bedrock' },
+      { episodeId: 2, text: 'Picks a model and writes prompts' },
+      { episodeId: 3, text: 'Makes dish photos' },
+      { episodeId: 4, text: 'Adds a guardrail' },
+      { episodeId: 5, text: 'Ships it with Lambda and logging' },
     ],
   },
   hub: {

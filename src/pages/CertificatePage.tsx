@@ -1,7 +1,7 @@
 import { Award, CheckCircle2, Circle, Printer } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { COURSE_COVER } from '@/components/media/partCovers'
+import { COURSE_COVER } from '@/components/media/covers'
 import { Container } from '@/components/misc'
 import { PageBand } from '@/components/PageBand'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Callout } from '@/components/ui/callout'
 import { Progress } from '@/components/ui/progress'
 import { useAppState } from '@/context/useAppState'
 import { certificateEligibility, coreProgress, visibleCertificate, type Requirement } from '@/lib/progress'
-import { finalQuiz, partQuizzes } from '@/data'
+import { episodeQuizzes, finalQuiz } from '@/data'
 import { formatIssueDate } from '@/lib/utils'
 
 function requirementLink(r: Requirement): { label: string; to: string } {
@@ -36,7 +36,7 @@ export default function CertificatePage() {
 
   if (!certificate) {
     const { done, total } = coreProgress(progress, data)
-    const quizCount = partQuizzes(data).length + (finalQuiz(data) ? 1 : 0)
+    const quizCount = episodeQuizzes(data).length + (finalQuiz(data) ? 1 : 0)
     const requirementsTotal = total + quizCount
     const met = requirementsTotal - unmet.length
     return (

@@ -25,27 +25,47 @@ describe('course data', () => {
   })
 
   it('covers every state the pages need', () => {
-    // The catalog: 12 episodes in 5 named parts, every part required, each with a catalog colour theme.
-    expect(courseData.parts.map((p) => p.title)).toEqual(['Foundations', 'Text models', 'Images and video', 'Safety', 'Building'])
-    expect(courseData.parts.filter((p) => p.optional)).toHaveLength(0)
-    expect(courseData.parts.map((p) => p.theme)).toEqual(['ocean', 'midnight', 'sunrise', 'slate', 'forest'])
-    expect(courseData.episodes).toHaveLength(12)
-    expect(courseData.episodes.map((e) => e.partId)).toEqual([1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5])
+    // The v2 catalog: 5 required episodes, each with its catalog theme, 4 chapters, outcomes and a check.
+    expect(courseData.episodes.map((e) => e.title)).toEqual([
+      'Welcome to Amazon Bedrock',
+      'Talking to a model',
+      'Pictures and video',
+      'Guardrails',
+      "From console to code, and what's next",
+    ])
+    expect(courseData.episodes.filter((e) => e.optional)).toHaveLength(0)
+    expect(courseData.episodes.map((e) => e.theme)).toEqual(['glass', 'midnight', 'sunrise', 'slate', 'forest'])
+    for (const e of courseData.episodes) {
+      expect(e.chapters).toHaveLength(4)
+      expect(e.outcomes.length).toBeGreaterThan(0)
+      expect(e.check?.question).toMatch(/\?$/)
+      expect(e.check?.answer).toBeTruthy()
+      expect(e.services?.length).toBeGreaterThan(0)
+    }
+    // E01's chapter names are real; no chapter has a start time yet.
+    expect(courseData.episodes[0]!.chapters!.map((c) => c.label)).toEqual([
+      'What Bedrock is',
+      'Paying and getting in',
+      'The console map',
+      'The model menu',
+    ])
+    expect(courseData.episodes.flatMap((e) => e.chapters ?? []).every((c) => c.t === undefined)).toBe(true)
     expect(courseData.episodes.filter((m) => m.labId)).toHaveLength(2)
     expect(courseData.labs.some((l) => l.untested && l.steps.some((s) => s.code))).toBe(true)
     expect(courseData.labs.some((l) => l.steps.every((s) => !s.code))).toBe(true)
     const kinds = new Set(courseData.episodes.flatMap((m) => (m.notes ?? []).map((n) => n.kind)))
     expect([...kinds].sort()).toEqual(['callout', 'code', 'list', 'p', 'steps', 'table'])
     for (const q of courseData.quizzes) expect(q.questions).toHaveLength(3)
-    // Quizzes are optional per part: some parts have one, the rest have none.
-    expect(courseData.quizzes.filter((q) => q.partId !== 'final')).toHaveLength(2)
+    // One placeholder quiz per episode, plus the final.
+    expect(courseData.quizzes.filter((q) => q.episodeId !== 'final').map((q) => q.episodeId)).toEqual([1, 2, 3, 4, 5])
     // Episodes carry the video fields; no files yet ("Video coming soon").
     for (const e of courseData.episodes) {
       expect(Object.keys(e.videos)).toHaveLength(0)
       expect(e.durationSec).toBeGreaterThan(0)
     }
-    // E01 and E02 have measured lengths; the rest show the catalog target as approximate.
-    expect(courseData.episodes.map((e) => Boolean(e.durationApprox))).toEqual([false, false, ...Array(10).fill(true)])
+    // E01 has its measured length (16:16); the rest show the catalog target as approximate.
+    expect(courseData.episodes[0]!.durationSec).toBe(976)
+    expect(courseData.episodes.map((e) => Boolean(e.durationApprox))).toEqual([false, true, true, true, true])
   })
 
   it('rejects a dangling lab reference', () => {
@@ -60,16 +80,42 @@ describe('course data', () => {
     expect(validateCourseData(data).join('\n')).toMatch(/Duplicate episode id/)
   })
 
-  it('allows a part without a quiz, but rejects two quizzes in one part and a second final', () => {
+  it('allows an episode without a quiz, but rejects two quizzes for one episode and a second final', () => {
     const data = cloneData()
-    data.quizzes = data.quizzes.filter((q) => q.partId !== 1)
+    data.quizzes = data.quizzes.filter((q) => q.episodeId !== 1)
     expect(validateCourseData(data)).toEqual([])
-    const twoInPart = cloneData()
-    twoInPart.quizzes.push({ ...twoInPart.quizzes[0]!, id: 'part-1b' })
-    expect(validateCourseData(twoInPart).join('\n')).toMatch(/Part 1 has 2 quizzes/)
+    const twoForEpisode = cloneData()
+    twoForEpisode.quizzes.push({ ...twoForEpisode.quizzes[0]!, id: 'episode-1b' })
+    expect(validateCourseData(twoForEpisode).join('\n')).toMatch(/Episode 1 has 2 quizzes/)
+    const unknown = cloneData()
+    unknown.quizzes[0] = { ...unknown.quizzes[0]!, episodeId: 99 }
+    expect(validateCourseData(unknown).join('\n')).toMatch(/unknown episode 99/)
     const twoFinals = cloneData()
     twoFinals.quizzes.push({ ...twoFinals.quizzes.at(-1)!, id: 'final-2' })
     expect(validateCourseData(twoFinals).join('\n')).toMatch(/at most one final quiz, found 2/)
+  })
+
+  it('accepts chapters without times, and checks times only when given', () => {
+    const data = cloneData()
+    const e = data.episodes[0]!
+    // All untimed (shipped) is valid; all timed inside the episode is valid.
+    expect(validateCourseData(data)).toEqual([])
+    e.chapters = e.chapters!.map((c, i) => ({ ...c, t: i * 120 }))
+    expect(validateCourseData(data)).toEqual([])
+    // A time past the end, or times for only some chapters, are errors.
+    e.chapters[3] = { ...e.chapters[3]!, t: e.durationSec + 1 }
+    expect(validateCourseData(data).join('\n')).toMatch(/chapter "The model menu" is outside the episode/)
+    e.chapters[3] = { label: 'The model menu' }
+    expect(validateCourseData(data).join('\n')).toMatch(/start times for some chapters only/)
+  })
+
+  it('rejects an episode with no outcomes or a half-written check', () => {
+    const data = cloneData()
+    data.episodes[1]!.outcomes = []
+    data.episodes[2]!.check = { question: 'A question?', answer: ' ' }
+    const errors = validateCourseData(data).join('\n')
+    expect(errors).toMatch(/Episode 2 needs at least one outcome/)
+    expect(errors).toMatch(/Episode 3 check needs a question and an answer/)
   })
 
   it('rejects an out-of-range answerIndex and passMark', () => {
@@ -83,7 +129,7 @@ describe('course data', () => {
 
   it('computes counts from the data', () => {
     const data = cloneData()
-    expect(courseCounts(data)).toMatchObject({ parts: 5, episodes: 12, labs: 2, partQuizzes: 2, hasFinal: true })
+    expect(courseCounts(data)).toMatchObject({ episodes: 5, chapters: 20, labs: 2, episodeQuizzes: 5, hasFinal: true })
     data.labs.pop()
     data.episodes = data.episodes.map((m) => (m.labId === 'lab-2' ? { ...m, labId: undefined } : m))
     expect(courseCounts(data).labs).toBe(1)

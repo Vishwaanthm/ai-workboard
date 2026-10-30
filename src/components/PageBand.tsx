@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * Page header band (DESIGN.md "Page bands"): ink surface, optional cover photo under a scrim, mono
- * eyebrow with the part's accent bar, the page h1 in the display face, a lede and free slots.
+ * eyebrow with the episode's accent bar, the page h1 in the display face, a lede and free slots.
  * Everything inside is in the ink scope, so buttons, badges and links render in their on-ink form.
  * `figure` (large screens only) shows the cover unscrimmed in a framed window on the right.
  */
@@ -30,7 +30,7 @@ export function PageBand({
   eyebrow?: ReactNode
   lede?: ReactNode
   cover?: { src: string; srcSet?: string }
-  /** Accent bar class, for example `bg-theme-ocean`; volt when omitted. */
+  /** Accent bar class, for example `bg-theme-glass`; volt when omitted. */
   accent?: string
   figure?: { src: string; srcSet?: string }
   size?: 'md' | 'lg'

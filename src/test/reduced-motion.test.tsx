@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { HubArt } from '@/components/art/HubArt'
 import { ProgressRing } from '@/components/art/ProgressRing'
 import { Reveal } from '@/components/motion/Reveal'
 import { courseData } from '@/data'
@@ -72,12 +71,10 @@ describe('reduced motion', () => {
     mockIntersectionObserver()
     render(
       <>
-        <HubArt />
         <Reveal>Revealed text</Reveal>
         <ProgressRing value={3} max={4} label="Done" />
       </>,
     )
-    expect(screen.getByTestId('hub-art')).not.toHaveClass('hub-art--animate')
     expect(screen.queryByRole('button', { name: /pause|play/i })).not.toBeInTheDocument()
     expect(screen.getByText('Revealed text')).toHaveAttribute('data-revealed', 'true')
     const fill = screen.getByTestId('ring-fill')
@@ -85,17 +82,10 @@ describe('reduced motion', () => {
     expect(Number(fill.getAttribute('stroke-dashoffset'))).toBeCloseTo(2 * Math.PI * 26 * 0.25, 3)
   })
 
-  it('draws the hub in once and reveals on scroll without the preference; no loop, no pause control', () => {
+  it('reveals on scroll without the preference; no loop, no pause control', () => {
     mockReducedMotion(false)
     const io = mockIntersectionObserver()
-    render(
-      <>
-        <HubArt />
-        <Reveal>Waiting text</Reveal>
-      </>,
-    )
-    expect(screen.getByTestId('hub-art')).toHaveClass('hub-art--animate')
-    expect(screen.queryByTestId('hub-flow')).not.toBeInTheDocument()
+    render(<Reveal>Waiting text</Reveal>)
     expect(screen.queryByRole('button', { name: /pause|play/i })).not.toBeInTheDocument()
     expect(screen.getByText('Waiting text')).toHaveAttribute('data-revealed', 'false')
     io.trigger()
@@ -109,13 +99,6 @@ describe('reduced motion', () => {
     delete window.IntersectionObserver
     render(<Reveal>Fallback text</Reveal>)
     expect(screen.getByText('Fallback text')).toHaveAttribute('data-revealed', 'true')
-  })
-
-  it('keeps the hub diagram labelled', () => {
-    mockReducedMotion(true)
-    render(<HubArt />)
-    const hub = screen.getByRole('img', { name: /Amazon Bedrock is one API/ })
-    expect(hub).toHaveAttribute('viewBox')
   })
 
   it('home hero: decorative background layer, no pause or play button, calls to action first', async () => {

@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
-import { coverFor, COURSE_COVER } from '@/components/media/partCovers'
+import { coverFor, COURSE_COVER } from '@/components/media/covers'
 import { useAppState } from '@/context/useAppState'
 import { cn, plural } from '@/lib/utils'
+import { episodeLabel, totalDurationLabel } from '@/lib/watch'
 
 /**
  * Split layout for Log in and Create account: on large screens an ink panel with the course image,
- * title and part spine sits beside the form; on small screens the form stands alone under the ink header.
+ * title and episode list sits beside the form; on small screens the form stands alone under the ink header.
  */
 export function AuthShell({ children }: { children: ReactNode }) {
   const { data } = useAppState()
@@ -24,15 +25,15 @@ export function AuthShell({ children }: { children: ReactNode }) {
           </p>
           <p className="mt-4 text-lg text-on-ink-muted">{data.course.summary}</p>
           <ul className="mt-8 flex flex-col gap-3">
-            {data.parts.map((part) => (
-              <li key={part.id} className="flex items-center gap-3 text-on-ink">
-                <span aria-hidden="true" className={cn('h-1 w-8 shrink-0 rounded-full', coverFor(part).accent)} />
-                <span className="font-mono text-sm text-on-ink-muted">Part {part.id}</span>
-                <span className="font-medium">{part.title}</span>
+            {data.episodes.map((episode) => (
+              <li key={episode.id} className="flex items-center gap-3 text-on-ink">
+                <span aria-hidden="true" className={cn('h-1 w-8 shrink-0 rounded-full', coverFor(episode).accent)} />
+                <span className="font-mono text-sm text-on-ink-muted">{episodeLabel(episode.number)}</span>
+                <span className="font-medium">{episode.title}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-sm text-on-ink-muted">{plural(data.episodes.length, 'video episode')}, labs, quizzes and a certificate.</p>
+          <p className="mt-8 text-sm text-on-ink-muted">{plural(data.episodes.length, 'video episode')}, {totalDurationLabel(data.episodes)} in total, with labs, quizzes and a certificate.</p>
         </div>
       </aside>
       <div className="flex items-center px-4 py-12 sm:px-6 md:py-16 lg:px-12">

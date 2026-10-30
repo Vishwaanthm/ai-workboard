@@ -1,6 +1,6 @@
 import { asset } from '@/lib/asset'
 import { Captions, Play, RotateCcw, X } from 'lucide-react'
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { usePrefersReducedMotion } from '@/lib/motion'
 import { isEpisodeComplete } from '@/lib/progress'
 import { readJSON, storageKeys, writeJSON } from '@/lib/storage'
 import { cn } from '@/lib/utils'
-import { availableLangs, formatDuration, LANG_LABELS, resumePosition, WATCHED_RATIO } from '@/lib/watch'
+import { availableLangs, formatDuration, LANG_LABELS, resumePosition, timedChapters, WATCHED_RATIO } from '@/lib/watch'
 import { Transcript } from './Transcript'
 
 export const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2] as const
@@ -66,7 +66,7 @@ export function VideoPlayer({ episode, next }: { episode: Episode; next?: Episod
   const latest = useRef({ time: 0, duration: episode.durationSec })
 
   const captionLang: Lang | undefined = episode.captions[lang] ? lang : langs.find((l) => episode.captions[l])
-  const chapters = episode.chapters ?? []
+  const chapters = useMemo(() => timedChapters(episode), [episode])
 
   const save = useCallback(() => {
     const { time, duration: d } = latest.current
