@@ -15,7 +15,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
         aria-label="About the course"
         className="ink-scope on-ink relative isolate hidden overflow-hidden bg-ink lg:flex lg:flex-col lg:justify-end"
       >
-        <img src={COURSE_COVER.src} alt="" decoding="async" className="absolute inset-0 -z-20 size-full object-cover" />
+        <img src={COURSE_COVER.src} srcSet={COURSE_COVER.srcSet} sizes="55vw" alt="" decoding="async" className="absolute inset-0 -z-20 size-full object-cover" />
         <div aria-hidden="true" className="band-scrim absolute inset-0 -z-10" />
         <div className="max-w-xl p-12 xl:p-16">
           <p className="font-mono text-sm font-semibold text-volt">{data.course.level} course</p>

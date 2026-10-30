@@ -30,9 +30,8 @@ async function get(url) {
   }
 }
 
-/** Hero background video and one photo per part theme. */
+/** One photo per part theme. (The Home hero is a real-time shader, not stock media: see CREDITS.md.) */
 export const MEDIA = [
-  { kind: 'video', id: 47713, name: 'hero' },
   { kind: 'image', id: 3542290, name: 'part-ocean' },
   { kind: 'image', id: 2750627, name: 'part-midnight' },
   { kind: 'image', id: 5189430, name: 'part-sunrise' },
@@ -41,8 +40,7 @@ export const MEDIA = [
 ]
 
 async function api(kind, id) {
-  const base = kind === 'video' ? 'https://pixabay.com/api/videos/' : 'https://pixabay.com/api/'
-  const res = await get(`${base}?key=${KEY}&id=${id}`)
+  const res = await get(`https://pixabay.com/api/?key=${KEY}&id=${id}`)
   if (!res.ok) throw new Error(`Pixabay ${kind} ${id}: HTTP ${res.status}`)
   const hit = (await res.json()).hits?.[0]
   if (!hit) throw new Error(`Pixabay ${kind} ${id}: not found`)
@@ -60,22 +58,10 @@ const credits = []
 
 for (const m of MEDIA) {
   const hit = await api(m.kind, m.id)
-  if (m.kind === 'video') {
-    const raw = join(TMP, `${m.name}.mp4`)
-    await download(hit.videos.medium.url, raw)
-    // 1280x720 H.264, no audio, 18 s loop, faststart; poster from the first frame.
-    ff(['-i', raw, '-t', '18', '-an', '-vf', 'scale=1280:-2,fps=24', '-c:v', 'libx264', '-preset', 'slow', '-crf', '30',
-      '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(OUT, `${m.name}.mp4`)])
-    ff(['-i', raw, '-t', '18', '-an', '-vf', 'scale=1280:-2,fps=24', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '47',
-      '-row-mt', '1', join(OUT, `${m.name}.webm`)])
-    ff(['-ss', '2', '-i', raw, '-frames:v', '1', '-vf', 'scale=1600:-2', '-c:v', 'libwebp', '-quality', '72',
-      join(OUT, `${m.name}-poster.webp`)])
-  } else {
-    const raw = join(TMP, `${m.name}.jpg`)
-    await download(hit.largeImageURL, raw)
-    for (const w of [640, 1280]) {
-      ff(['-i', raw, '-vf', `scale=${w}:-2`, '-c:v', 'libwebp', '-quality', '70', join(OUT, `${m.name}-${w}.webp`)])
-    }
+  const raw = join(TMP, `${m.name}.jpg`)
+  await download(hit.largeImageURL, raw)
+  for (const w of [640, 1280]) {
+    ff(['-i', raw, '-vf', `scale=${w}:-2`, '-c:v', 'libwebp', '-quality', '70', join(OUT, `${m.name}-${w}.webp`)])
   }
   credits.push({ file: m.name, source: hit.pageURL, author: hit.user, license: 'Pixabay Content License' })
 }

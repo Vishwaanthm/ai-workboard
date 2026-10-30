@@ -270,13 +270,34 @@
 }
 
 /* ---- Redesign: cinematic surfaces (DESIGN.md "Imagery and motion") ---- */
+/* Hero: the band scrim darkens the copy side only, so the field stays vivid on the right; the copy
+   pool (.hero-copy-scrim) adds a soft ink ellipse under the text block. Measured in DESIGN.md. */
 .hero-scrim {
-  background: linear-gradient(90deg, rgb(11 15 28 / 0.94) 0%, rgb(11 15 28 / 0.8) 48%, rgb(11 15 28 / 0.4) 100%);
+  background: linear-gradient(
+    90deg,
+    rgb(11 15 28 / 0.9) 0%,
+    rgb(11 15 28 / 0.84) 36%,
+    rgb(11 15 28 / 0.66) 58%,
+    rgb(11 15 28 / 0.14) 80%,
+    rgb(11 15 28 / 0) 100%
+  );
+}
+.hero-copy-scrim {
+  inset: -20% -10% -20% -12%;
+  max-width: 74rem;
+  background: radial-gradient(closest-side, rgb(11 15 28 / 0.66) 0%, rgb(11 15 28 / 0.56) 60%, rgb(11 15 28 / 0) 100%);
 }
 @media (max-width: 767px) {
   .hero-scrim {
-    background: linear-gradient(0deg, rgb(11 15 28 / 0.96) 0%, rgb(11 15 28 / 0.84) 60%, rgb(11 15 28 / 0.6) 100%);
+    background: linear-gradient(0deg, rgb(11 15 28 / 0.95) 0%, rgb(11 15 28 / 0.88) 52%, rgb(11 15 28 / 0.62) 62%, rgb(11 15 28 / 0.08) 78%, rgb(11 15 28 / 0) 100%);
   }
+  .hero-copy-scrim {
+    display: none;
+  }
+}
+/* The field canvas fades in once its first frame is drawn (instant under reduced motion). */
+.hero-field {
+  transition: opacity 900ms var(--ease-out);
 }
 .part-scrim {
   background: linear-gradient(180deg, rgb(11 15 28 / 0.5) 0%, rgb(11 15 28 / 0.86) 50%, rgb(11 15 28 / 0.96) 100%);
@@ -367,17 +388,17 @@
   }
 }
 
-/* ---- Interactive hero: pointer parallax (CSS variables --hx/--hy in -1..1, set by HeroNetwork) ---- */
-.hero-layer-bg {
-  transform: translate3d(calc(var(--hx, 0) * -14px), calc(var(--hy, 0) * -10px), 0) scale(1.06);
-}
+/* ---- Interactive hero: pointer parallax (CSS variables --hx/--hy in -1..1, set by the hero field).
+   The field itself parallaxes inside WebGL (camera sway), so its canvas is never CSS-scaled or blurred. ---- */
 .hero-layer-fg {
   transform: translate3d(calc(var(--hx, 0) * 6px), calc(var(--hy, 0) * 4px), 0);
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-layer-bg,
   .hero-layer-fg {
     transform: none;
+  }
+  .hero-field {
+    transition: none;
   }
   .card-lift:hover {
     transform: none;

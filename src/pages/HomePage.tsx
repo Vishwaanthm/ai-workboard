@@ -8,9 +8,8 @@ import { ExploreByPart } from '@/components/home/ExploreByPart'
 import { LearningHub } from '@/components/home/LearningHub'
 import { ModelStrip } from '@/components/home/ModelStrip'
 import { UseCases } from '@/components/home/UseCases'
-import { BackgroundVideo } from '@/components/media/BackgroundVideo'
-import { HeroNetwork } from '@/components/media/HeroNetwork'
-import { HERO_MEDIA, PART_COVERS } from '@/components/media/partCovers'
+import { HeroField } from '@/components/media/HeroField'
+import { PART_COVERS } from '@/components/media/partCovers'
 import { Container } from '@/components/misc'
 import { Reveal } from '@/components/motion/Reveal'
 import { PageHeading } from '@/components/PageHeading'
@@ -41,7 +40,6 @@ export default function HomePage() {
   const startLabel = user ? 'Continue the course' : 'Start the course'
   const featuredLabs = data.labs.slice(0, 5)
   const heroRef = useRef<HTMLElement>(null)
-  const copyRef = useRef<HTMLDivElement>(null)
 
   return (
     <>
@@ -49,15 +47,14 @@ export default function HomePage() {
         ref={heroRef}
         className="on-ink relative isolate flex min-h-[88dvh] items-end overflow-hidden bg-ink pt-28 pb-14 md:items-center md:pb-20"
       >
-        {/* Depth layers: video (back), scrim, pointer-reactive network, copy (front). See HeroNetwork. */}
-        <div aria-hidden="true" className="hero-layer-bg pointer-events-none absolute inset-0 -z-10">
-          <BackgroundVideo {...HERO_MEDIA} />
-        </div>
-        {/* Scrim: keeps every line of hero text at or above 4.5:1 over the brightest video frame. */}
+        {/* Layers: real-time field (back, pointer-reactive), scrim, copy (front). See HeroField. */}
+        <HeroField hostRef={heroRef} />
+        {/* Scrim: keeps every line of hero text at or above AA over the brightest field pixel. */}
         <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0 -z-10" />
-        <HeroNetwork hostRef={heroRef} copyRef={copyRef} />
         <Container className="hero-layer-fg relative">
-          <div ref={copyRef} className="hero-rise max-w-[46rem]">
+          {/* A soft ink pool under the copy block, on top of the band scrim (measured in DESIGN.md). */}
+          <div aria-hidden="true" className="hero-copy-scrim pointer-events-none absolute -z-10" />
+          <div className="hero-rise max-w-[46rem]">
             <p className="text-sm font-semibold tracking-[0.14em] text-volt uppercase">A course by {data.course.instructorOrg}</p>
             <PageHeading
               title={data.course.title}

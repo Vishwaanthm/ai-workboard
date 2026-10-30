@@ -1,4 +1,4 @@
-import { useBackgroundVideoSetting, usePrefersReducedMotion } from '@/lib/motion'
+import { useBackgroundMotionSetting, usePrefersReducedMotion } from '@/lib/motion'
 
 function Chip({ name }: { name: string }) {
   return (
@@ -13,11 +13,11 @@ function Chip({ name }: { name: string }) {
  * Provider names as text chips (no third-party logos). Moving: an endless left scroll made of two
  * identical tracks (the second is aria-hidden), paused while hovered or focused (the strip is a
  * focusable region). Static: a centred wrapped list when the system asks for reduced motion or the
- * footer "Background video" switch (the site's pause control for decorative loops, WCAG 2.2.2) is off.
+ * footer "Background motion" switch (the site's pause control for decorative loops, WCAG 2.2.2) is off.
  */
 export function ModelStrip({ providers }: { providers: string[] }) {
   const reduced = usePrefersReducedMotion()
-  const loopsOn = useBackgroundVideoSetting()
+  const loopsOn = useBackgroundMotionSetting()
   if (providers.length === 0) return null
   const moving = loopsOn && !reduced
 

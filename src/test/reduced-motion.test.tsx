@@ -118,49 +118,42 @@ describe('reduced motion', () => {
     expect(hub).toHaveAttribute('viewBox')
   })
 
-  it('home hero: video plus a decorative pointer network, and no pause or play button', async () => {
+  it('home hero: decorative background layer, no pause or play button, calls to action first', async () => {
     mockReducedMotion(false)
     mockIntersectionObserver()
     renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
-    expect(screen.getByTestId('bg-video')).toBeInTheDocument()
-    const network = screen.getByTestId('hero-network')
-    expect(network).toHaveAttribute('aria-hidden', 'true')
-    expect(network.getAttribute('class')).toContain('pointer-events-none')
+    // jsdom has no WebGL, so the field falls back to its static poster (the live field: hero-field.test.tsx).
+    const poster = await screen.findByTestId('hero-poster')
+    expect(poster.closest('[aria-hidden="true"]')).not.toBeNull()
+    expect(poster.parentElement!.className).toContain('pointer-events-none')
     expect(screen.queryByRole('button', { name: /pause|play/i })).not.toBeInTheDocument()
-    // The calls to action stay reachable above the decorative layers.
     expect(screen.getAllByRole('link', { name: 'Start the course' }).length).toBeGreaterThan(0)
   })
 
-  it('home hero under reduced motion: static poster, no network canvas, no video, no switch', async () => {
+  it('home hero under reduced motion: no pause or play button and no footer switch', async () => {
     mockReducedMotion(true)
     renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
-    expect(screen.getByTestId('bg-poster')).toBeInTheDocument()
-    expect(screen.queryByTestId('bg-video')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('hero-network')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /pause|play/i })).not.toBeInTheDocument()
     // The footer switch is not offered: there is nothing moving to stop.
-    expect(screen.queryByRole('button', { name: /Background video/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Background motion/ })).not.toBeInTheDocument()
   })
 
-  it('footer "Background video" switch stops the hero video and is remembered', async () => {
+  it('footer "Background motion" switch is a toggle button and its choice is remembered', async () => {
     mockReducedMotion(false)
     mockIntersectionObserver()
     const user = userEvent.setup()
     const first = renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
-    const toggle = screen.getByRole('button', { name: 'Background video on' })
+    const toggle = screen.getByRole('button', { name: 'Background motion on' })
     expect(toggle).toHaveAttribute('aria-pressed', 'true')
     await user.click(toggle)
-    expect(screen.getByRole('button', { name: 'Background video off' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.queryByTestId('bg-video')).not.toBeInTheDocument()
-    expect(screen.getByTestId('bg-poster')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Background motion off' })).toHaveAttribute('aria-pressed', 'false')
     first.unmount()
     renderApp('/')
     await screen.findByRole('heading', { level: 1, name: courseData.course.title })
-    expect(screen.getByRole('button', { name: 'Background video off' })).toBeInTheDocument()
-    expect(screen.queryByTestId('bg-video')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Background motion off' })).toBeInTheDocument()
   })
 
   it('up next counts down and autoplays only without reduced motion; with it, waits for a click', async () => {

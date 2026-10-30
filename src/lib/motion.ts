@@ -49,13 +49,14 @@ export function useReveal<T extends Element>(): { ref: RefObject<T | null>; reve
 }
 
 /*
- * Site-wide "Background video" preference (WCAG 2.2.2 pause mechanism for the looping decorative
- * background video). Lives in the footer, not over the hero. Stored in localStorage; default on.
+ * Site-wide "Background motion" preference (WCAG 2.2.2 pause mechanism for the looping decorative
+ * motion: the Home hero field and the model strip). Lives in the footer, not over the hero. Stored in
+ * localStorage; default on. The storage key predates the rename and is kept so saved choices survive.
  */
 const BG_KEY = 'aiw.backgroundVideo'
 const bgListeners = new Set<() => void>()
 
-function readBackgroundVideo(): boolean {
+function readBackgroundMotion(): boolean {
   try {
     return window.localStorage.getItem(BG_KEY) !== 'off'
   } catch {
@@ -63,7 +64,7 @@ function readBackgroundVideo(): boolean {
   }
 }
 
-export function setBackgroundVideo(on: boolean): void {
+export function setBackgroundMotion(on: boolean): void {
   try {
     window.localStorage.setItem(BG_KEY, on ? 'on' : 'off')
   } catch {
@@ -72,14 +73,14 @@ export function setBackgroundVideo(on: boolean): void {
   bgListeners.forEach((l) => l())
 }
 
-/** True when decorative background video may play (user setting on and reduced motion off). */
-export function useBackgroundVideoSetting(): boolean {
+/** True when the user has decorative background motion switched on (the footer setting). */
+export function useBackgroundMotionSetting(): boolean {
   return useSyncExternalStore(
     (cb) => {
       bgListeners.add(cb)
       return () => bgListeners.delete(cb)
     },
-    readBackgroundVideo,
+    readBackgroundMotion,
     () => true,
   )
 }

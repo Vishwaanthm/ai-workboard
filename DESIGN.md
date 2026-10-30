@@ -6,7 +6,7 @@ tokens only. Anything not listed here is not allowed in components.
 
 ## Direction
 
-Cinematic ink surfaces with real imagery (stock video and photos) for every page header, paper reading
+Cinematic ink surfaces with real imagery (a real-time WebGL field on Home, photos elsewhere) for every page header, paper reading
 surfaces for learning content, and one electric volt-lime signal colour. Each course part carries a
 catalog accent and a cover photo. Bold display type, a calm text face, a mono for labels and code.
 
@@ -111,16 +111,14 @@ page bands use a mono eyebrow with the part accent bar.
 
 - Every page opens with an ink band (`src/components/PageBand.tsx`): cover photo, `band-scrim`, mono
   eyebrow with accent bar, h1, lede, free slot; optional framed cover window on large screens.
-  Course, Dashboard, Certificate and 404 use the hero poster frame; Labs uses the Building cover; Lab and
+  Course, Dashboard, Certificate and 404 (and the auth panel) use the hero field still (`hero-field-*.webp`); Labs uses the Building cover; Lab and
   Quiz use their part's cover. The lesson page uses an ink "theater" around the player with the part
   cover at 40% under the same scrim. Login and Register use a split layout (`AuthShell`).
 - Part covers (Pixabay, CREDITS.md): 640 and 1280 WebP, `srcset`, lazy except in bands.
-- Scrims (worst case = text over a pure-white image pixel; the hero video does contain white pixels):
+- Scrims (worst case = text over a pure-white image pixel; the Home hero is measured instead, see below):
 
 | Surface | Scrim (ink alpha in the text zone) | on-ink | on-ink-muted | volt |
 | --- | --- | --- | --- | --- |
-| Home hero, desktop (copy within 48% of width) | >= 0.80 | 9.60 | 5.48 | 7.97 |
-| Home hero, mobile (copy in the lower 60%) | >= 0.84 | 11.17 | 6.37 | 9.27 |
 | Page band, any width (min 0.78 at the right edge) | >= 0.78 | 8.88 | 5.07 | 7.37 |
 | Page band, below 768px (flat) | 0.88 | 12.75 | 7.27 | 10.58 |
 | Video placeholder | 0.86 | 11.88 | 6.78 | 9.86 |
@@ -128,25 +126,39 @@ page bands use a mono eyebrow with the part accent bar.
 
 ## Interactive hero (Home)
 
-Layers, back to front: background video (`hero-layer-bg`), hero scrim, pointer network canvas
-(`HeroNetwork`), copy (`hero-layer-fg`). No pause or play control on the hero (user requirement).
+Layers, back to front: real-time field canvas (`HeroField`, drawn by `heroFieldGL.ts`), band scrim
+(`hero-scrim`), copy pool (`hero-copy-scrim`, a soft ink ellipse under the text block), copy
+(`hero-layer-fg`). No pause or play control on the hero (user requirement). No stock footage.
 
-- Network: plain 2D canvas, 24 to 110 nodes (one per 14,000 px2), drifting; faint paper lines
-  between nodes closer than 130px. With a fine pointer the nodes within 220px are drawn in (held off
-  inside 48px), link to the cursor in volt and a soft volt spotlight (radius 300px) follows it.
-- Parallax: the pointer offset (-1..1, eased) moves the video -14/-10px (scaled 1.06 so no edge shows),
-  the copy +6/+4px and each node by up to 22/16px times its depth. No tilt (text stays crisp).
-- Text safety: the canvas knocks itself out over the copy box (destination-out, feathered 24px), so
-  the network keeps about 11% strength behind the text. Hero copy uses `on-ink` and volt only. Worst
-  case with a volt line over a white pixel: on-ink 7.69 and volt 6.38 at the 0.80 scrim; the headline
-  where it runs past 48% of the width (scrim about 0.69, large text) 5.31.
-- Touch / no hover: no pointer tracking; ambient drift plus a 900ms volt ripple that pushes nearby
-  nodes on tap. Listeners are passive on the hero section; the canvas has `pointer-events: none`.
-- Performance: requestAnimationFrame, frame-rate independent easing, devicePixelRatio capped at 2,
-  paused when the hero is off-screen (IntersectionObserver) or the tab is hidden, resized with
-  ResizeObserver, no new dependencies.
-- Reduced motion: no canvas, no parallax, poster image instead of video. Footer "Background video"
-  switch off: poster, one still network frame, no pointer tracking.
+- Field ("data landscape"): raw WebGL (WebGL2, WebGL1 fallback, GLSL ES 1.00, no dependency), one
+  opaque canvas, two passes. Sky: ink gradient, aurora ribbons in ocean, forest and midnight above the
+  horizon, a thin sunrise line on the horizon, sparse one-pixel stars, dithering against banding.
+  Field: a perspective grid of soft points and 1px ridgelines (additive), displaced by flowing simplex
+  noise that drifts toward the viewer; tinted by the part accents, crests brighter; about one row in
+  nine carries a volt "data packet" with a tail. Portrait screens look down more steeply so the field
+  fills the space above the copy.
+- Fine pointer: the field rises into a lit volt bulge with slow rings under the cursor (ground-plane
+  pick, lerped, frame-rate independent), a soft volt light follows the cursor in the sky, the camera
+  sways with the pointer (parallax inside WebGL, so the canvas is never CSS-scaled) and the copy layer
+  shifts +6/+4px. Touch / no hover: ambient motion plus a ripple that runs out from a tap; no tracking.
+- Crispness: rendered at devicePixelRatio (capped at 2), MSAA below 1.5x; grid density follows the
+  hero size (60 to 240 columns, 70 to 120 rows). If frames stay over 24 ms for about 2 s the render
+  scale drops one 0.5 step (never below 1).
+- Loading: the renderer is a separate lazy chunk (budget < 8 KB gzip in `check-size`); the hero copy
+  and calls to action render first and the canvas fades in over 900ms once its first frame is drawn.
+- Lifecycle: requestAnimationFrame; paused when the hero is off-screen (IntersectionObserver) or the
+  tab is hidden; ResizeObserver; `webglcontextlost` shows the poster until `webglcontextrestored`;
+  unmount deletes buffers and programs and calls `WEBGL_lose_context`.
+- Footer "Background motion" off: the field freezes on its current frame (no loop, no pointer
+  tracking); off at load: the still frame at `STILL_TIME`. Reduced motion: that still frame, rendered
+  live at the screen's resolution, no fade. No WebGL: `hero-field-1600/2560.webp`, stills rendered from
+  the same shader at `STILL_TIME` (2560x1440 capture, WebP q80).
+- Text safety (measured, 2026-10-30): band scrim 0.90 / 0.84 at 36% / 0.66 at 58% / 0.14 at 80% / 0;
+  copy pool up to 0.66; below 768px a bottom-up scrim 0.95 / 0.88 at 52% / 0.62 at 62% / 0.08 at 78%.
+  Worst background pixel under each text box at 1920x1080, idle and with the cursor bulge right under
+  the copy: eyebrow (volt, 14px) 11.9:1, headline (80px) 9.0:1, subtitle (on-ink, 20px) 13.9:1,
+  "View syllabus" 12.9:1. At 1280x800 with the cursor on the headline: 13.7 / 9.3 / 14.7 / 16.8.
+  At 375x812: eyebrow 10.3, headline 13.4, subtitle 14.8. Hero copy uses `on-ink` and volt only.
 
 ## Motion
 
@@ -163,8 +175,8 @@ Layers, back to front: background video (`hero-layer-bg`), hero scrim, pointer n
 | `--duration-ring` | 700ms | Progress ring fill |
 | hero rise | 700ms, 80ms stagger | Hero copy entrance |
 
-Looping motion: only the hero background video, the hero network and the Home model provider strip,
-all stopped by the footer "Background video" switch (WCAG 2.2.2) and all absent under
+Looping motion: only the Home hero field and the Home model provider strip, both stopped by the
+footer "Background motion" switch (WCAG 2.2.2) and both still under
 `prefers-reduced-motion` (the switch is then hidden because nothing moves). Only `transform`, `opacity`, `filter`, `stroke-dashoffset` and the
 canvas animate. The global reduced-motion rule sets every CSS duration to 0.01ms as a backstop.
 

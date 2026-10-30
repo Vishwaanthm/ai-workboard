@@ -35,12 +35,14 @@ function cover(name: string, accent: string, edge: string): Cover {
   }
 }
 
-/** Hero background loop (Pixabay, see CREDITS.md): VP9 WebM first, H.264 MP4 fallback. Only the poster is preloaded. */
-export const HERO_MEDIA = {
-  webm: asset('/media/hero.webm'),
-  mp4: asset('/media/hero.mp4'),
-  poster: asset('/media/hero-poster.webp'),
+/**
+ * Still of the Home hero field (rendered from its own shader at STILL_TIME, see DESIGN.md "Interactive
+ * hero"). The hero shows it only without WebGL; pages that are not about one part use it as their band.
+ */
+export const HERO_POSTER = {
+  src: asset('/media/hero-field-1600.webp'),
+  srcSet: `${asset('/media/hero-field-1600.webp')} 1600w, ${asset('/media/hero-field-2560.webp')} 2560w`,
 }
 
-/** Course-level band image (the hero poster frame), for pages that are not about one part. */
-export const COURSE_COVER = { src: asset('/media/hero-poster.webp') }
+/** Course-level band image (the hero field still), for pages that are not about one part. */
+export const COURSE_COVER = HERO_POSTER

@@ -1,21 +1,24 @@
 import { Link } from 'react-router'
-import { setBackgroundVideo, useBackgroundVideoSetting, usePrefersReducedMotion } from '@/lib/motion'
+import { setBackgroundMotion, useBackgroundMotionSetting, usePrefersReducedMotion } from '@/lib/motion'
 import { BrandMark } from './BrandMark'
 
-/** Turns the decorative background video on or off site-wide (hidden when the system reduces motion). */
-function BackgroundVideoToggle() {
-  const on = useBackgroundVideoSetting()
+/**
+ * Pauses or resumes the decorative background motion site-wide (the Home hero field and the model strip).
+ * Hidden when the system reduces motion: nothing loops then.
+ */
+function BackgroundMotionToggle() {
+  const on = useBackgroundMotionSetting()
   const reduced = usePrefersReducedMotion()
   if (reduced) return null
   return (
     <button
       type="button"
       aria-pressed={on}
-      onClick={() => setBackgroundVideo(!on)}
+      onClick={() => setBackgroundMotion(!on)}
       className="mt-3 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control px-2 text-sm font-medium text-on-ink-muted transition-colors duration-[120ms] hover:text-on-ink"
     >
       <span aria-hidden="true" className={on ? 'size-2 rounded-full bg-volt' : 'size-2 rounded-full border border-on-ink-muted'} />
-      Background video {on ? 'on' : 'off'}
+      Background motion {on ? 'on' : 'off'}
     </button>
   )
 }
@@ -31,7 +34,7 @@ export function SiteFooter() {
             AI Workboard is not affiliated with or endorsed by AWS.
           </p>
           <p className="mt-3 text-sm text-on-ink-muted">© 2026 AI Workboard</p>
-          <BackgroundVideoToggle />
+          <BackgroundMotionToggle />
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-2 md:flex-col md:items-end">
           <Link to="/course" className="inline-flex min-h-11 items-center px-2 font-medium hover:text-volt">

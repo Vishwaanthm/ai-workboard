@@ -1,6 +1,7 @@
 // Bundle budget check (PLAN-PHASE2.md criterion 15). Run after `npm run build`.
-// Resolves the entry chunk and the Home page chunk from the Vite manifest and gzips each file
-// separately (level 9). Fails if Home >= 17769 bytes or the entry grew by more than 5120 bytes.
+// Resolves the entry chunk, the Home page chunk and the lazily loaded hero field renderer from the Vite
+// manifest and gzips each file separately (level 9). Fails if Home >= 17769 bytes, the entry grew by more
+// than 5120 bytes, or the hero field chunk (raw WebGL, loaded after the hero copy) reaches 8192 bytes.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
@@ -9,6 +10,7 @@ const DIST = 'dist'
 const BUDGET = {
   home: { key: 'src/pages/HomePage.tsx', max: 2409 + 15360 },
   entry: { key: 'index.html', max: 80075 + 5120 },
+  field: { key: 'src/components/media/heroFieldGL.ts', max: 8192 },
 }
 
 const manifest = JSON.parse(readFileSync(join(DIST, '.vite', 'manifest.json'), 'utf8'))

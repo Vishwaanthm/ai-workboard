@@ -260,7 +260,7 @@ describe('model provider strip', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(PROVIDERS.length)
   })
 
-  it('is static when the footer Background video switch is off', () => {
+  it('is static when the footer Background motion switch is off', () => {
     mockReducedMotion(false)
     window.localStorage.setItem('aiw.backgroundVideo', 'off')
     render(<ModelStrip providers={PROVIDERS} />)

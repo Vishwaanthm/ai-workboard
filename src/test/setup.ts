@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach } from 'vitest'
 
-// jsdom has no 2D canvas; return null (as a browser without canvas support would) instead of logging
-// "not implemented" for every hero render. HeroNetwork treats a null context as "draw nothing".
+// jsdom has no canvas contexts; return null (as a browser without WebGL would) instead of logging
+// "not implemented" for every hero render. HeroField then shows its static poster. Tests that need a
+// live field stub getContext with a fake WebGL context (see hero-field.test.tsx).
 HTMLCanvasElement.prototype.getContext = (() => null) as unknown as HTMLCanvasElement['getContext']
 
 afterEach(() => {
