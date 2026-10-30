@@ -1,0 +1,942 @@
+WEBVTT
+
+00:00:00.350 --> 00:00:04.877
+Imagine a restaurant where every
+chef is a world-class AI model.
+
+00:00:04.917 --> 00:00:08.977
+You sit down once, read one menu,
+and order from any of them.
+
+00:00:09.017 --> 00:00:13.724
+That restaurant is real.
+It's called Amazon Bedrock.
+
+00:00:14.083 --> 00:00:18.643
+Welcome to episode one. In the next
+twenty minutes, you'll get your bearings.
+
+00:00:18.683 --> 00:00:21.943
+First, what Bedrock is,
+and why teams use it.
+
+00:00:21.983 --> 00:00:24.810
+Then how you pay for
+it, and how you get in.
+
+00:00:24.850 --> 00:00:29.243
+Then a tour of the console, and
+finally, how to read the model menu.
+
+00:00:29.283 --> 00:00:33.362
+No coding needed today. Just follow along.
+
+00:00:33.717 --> 00:00:37.289
+Chapter one. What is Bedrock, really?
+
+00:00:37.650 --> 00:00:40.477
+Here's the restaurant idea in one picture.
+
+00:00:40.517 --> 00:00:43.377
+You come through one
+door, and get one menu.
+
+00:00:43.417 --> 00:00:47.243
+In the kitchen, each chef is a
+model from a different company.
+
+00:00:47.283 --> 00:00:51.540
+And you never hire a chef
+yourself. You just order.
+
+00:00:51.917 --> 00:00:56.443
+Meet Priya. She wants to build a
+cooking app that suggests dinner ideas.
+
+00:00:56.483 --> 00:00:58.700
+She doesn't want to run AI servers,
+
+00:00:58.740 --> 00:01:02.443
+and she wants to try several
+models before she picks one.
+
+00:01:02.483 --> 00:01:05.733
+We'll follow her through
+this whole course.
+
+00:01:06.083 --> 00:01:07.843
+Priya has three worries.
+
+00:01:07.883 --> 00:01:11.410
+She doesn't want to run
+servers. Bedrock is serverless.
+
+00:01:11.450 --> 00:01:15.477
+She wants to try many models.
+Bedrock gives her one menu.
+
+00:01:15.517 --> 00:01:20.509
+And her users' data must stay
+private. Bedrock doesn't share it.
+
+00:01:20.850 --> 00:01:25.077
+In AWS's words, Bedrock is
+a fully managed service.
+
+00:01:25.117 --> 00:01:29.531
+It gives you many foundation
+models through one API.
+
+00:01:29.883 --> 00:01:31.610
+Here's the whole picture.
+
+00:01:31.650 --> 00:01:35.143
+Your app sends a request to
+Bedrock's runtime endpoint.
+
+00:01:35.183 --> 00:01:37.777
+Bedrock passes it to the model you named.
+
+00:01:37.817 --> 00:01:41.095
+And the answer comes back the same way.
+
+00:01:41.450 --> 00:01:43.543
+So what is a foundation model?
+
+00:01:43.583 --> 00:01:47.977
+It's a large model, trained ahead
+of time on a huge amount of data.
+
+00:01:48.017 --> 00:01:52.737
+And it can adapt to many different
+tasks, from writing to search.
+
+00:01:53.083 --> 00:01:55.777
+Bedrock is built for generative AI.
+
+00:01:55.817 --> 00:01:58.177
+That's AI that creates something new.
+
+00:01:58.217 --> 00:02:00.510
+It can write and summarize text.
+
+00:02:00.550 --> 00:02:03.443
+It can answer questions
+about your documents.
+
+00:02:03.483 --> 00:02:07.055
+And it can make images and short videos.
+
+00:02:07.417 --> 00:02:11.810
+Before Bedrock, using several
+AI companies was a lot of work.
+
+00:02:11.850 --> 00:02:16.010
+Each one had its own API, its
+own keys, and its own bill.
+
+00:02:16.050 --> 00:02:20.177
+With Bedrock, it all runs
+through your one AWS account.
+
+00:02:20.217 --> 00:02:23.629
+One set of permissions, and one bill.
+
+00:02:23.983 --> 00:02:26.077
+So what do teams build with it?
+
+00:02:26.117 --> 00:02:29.110
+Support chatbots that
+answer around the clock.
+
+00:02:29.150 --> 00:02:32.610
+Moderation that flags
+harmful text or images.
+
+00:02:32.650 --> 00:02:35.877
+Search that finds answers
+in company documents.
+
+00:02:35.917 --> 00:02:39.207
+And pictures for products and marketing.
+
+00:02:39.550 --> 00:02:42.543
+Picture a support chatbot
+on a shop's website.
+
+00:02:42.583 --> 00:02:44.977
+A customer asks where their order is.
+
+00:02:45.017 --> 00:02:49.877
+The app sends the question, with the
+order details, to a model on Bedrock.
+
+00:02:49.917 --> 00:02:55.013
+The model writes a friendly answer,
+and the app shows it to the customer.
+
+00:02:55.350 --> 00:02:59.077
+Without Bedrock, every model
+becomes its own project.
+
+00:02:59.117 --> 00:03:03.610
+You'd rent GPUs, install the model,
+and keep it running yourself.
+
+00:03:03.650 --> 00:03:09.019
+With Bedrock, AWS runs all of
+that for you. It's serverless.
+
+00:03:09.383 --> 00:03:11.443
+Four reasons teams choose it.
+
+00:03:11.483 --> 00:03:15.010
+One API, the same call
+style for many models.
+
+00:03:15.050 --> 00:03:18.043
+Pay per use, with no servers sitting idle.
+
+00:03:18.083 --> 00:03:23.110
+Privacy: your prompts aren't shared with
+model makers or used to train models.
+
+00:03:23.150 --> 00:03:28.110
+And it plugs into the AWS
+services you already use.
+
+00:03:28.483 --> 00:03:32.810
+Quick check. Who runs the servers,
+when you call a model on Bedrock?
+
+00:03:32.850 --> 00:03:38.049
+AWS does. It's serverless,
+so you only send requests.
+
+00:03:38.383 --> 00:03:43.410
+So far: Bedrock is one door
+to many models, run by AWS.
+
+00:03:43.450 --> 00:03:48.069
+Foundation models do the work,
+and your prompts stay private.
+
+00:03:48.417 --> 00:03:52.265
+Chapter two. How you
+pay, and how you get in.
+
+00:03:52.617 --> 00:03:54.743
+There are three main ways to pay.
+
+00:03:54.783 --> 00:03:58.543
+On demand, you pay for each
+token, with no commitment.
+
+00:03:58.583 --> 00:04:01.677
+Batch sends many requests
+at once, in a file.
+
+00:04:01.717 --> 00:04:04.610
+And for some models,
+batch costs about half.
+
+00:04:04.650 --> 00:04:07.943
+Provisioned throughput
+reserves capacity by the hour.
+
+00:04:07.983 --> 00:04:12.419
+It's for steady, heavy traffic,
+or for a custom model.
+
+00:04:12.783 --> 00:04:16.343
+On demand, what you pay for
+depends on the kind of model.
+
+00:04:16.383 --> 00:04:21.077
+Text models charge for the tokens you
+send, and the tokens you get back.
+
+00:04:21.117 --> 00:04:24.477
+Embedding models charge for
+the tokens you send in.
+
+00:04:24.517 --> 00:04:27.972
+And image models charge per image.
+
+00:04:28.317 --> 00:04:30.343
+Here's how a batch job works.
+
+00:04:30.383 --> 00:04:34.343
+You put all your requests in
+one file, in an S3 bucket.
+
+00:04:34.383 --> 00:04:38.343
+Then Bedrock works through them.
+It all happens in the background.
+
+00:04:38.383 --> 00:04:42.280
+And the results land back
+in S3 when it's done.
+
+00:04:42.617 --> 00:04:45.943
+Provisioned throughput is
+measured in model units.
+
+00:04:45.983 --> 00:04:49.210
+Each unit gives a set number
+of tokens per minute.
+
+00:04:49.250 --> 00:04:53.543
+You're billed by the hour, and a
+longer commitment costs less per hour.
+
+00:04:53.583 --> 00:04:58.787
+And a model you fine-tune yourself
+needs provisioned throughput to run.
+
+00:04:59.150 --> 00:05:03.410
+People often ask how Bedrock
+differs from SageMaker AI.
+
+00:05:03.450 --> 00:05:06.777
+Bedrock is for building apps
+with ready-made models.
+
+00:05:06.817 --> 00:05:11.977
+SageMaker AI is for training and running
+your own models, with full control.
+
+00:05:12.017 --> 00:05:17.924
+A common path is to start with Bedrock,
+and move only if you need more control.
+
+00:05:18.283 --> 00:05:20.010
+And there are three ways in.
+
+00:05:20.050 --> 00:05:23.077
+The console playground,
+with no code at all.
+
+00:05:23.117 --> 00:05:25.910
+The AWS SDKs, from your own code.
+
+00:05:25.950 --> 00:05:31.102
+And other AWS services you
+already use, like Lambda.
+
+00:05:31.450 --> 00:05:33.310
+Your Region matters too.
+
+00:05:33.350 --> 00:05:37.877
+Requests to a Region stay in that
+Region, so pick one near your users.
+
+00:05:37.917 --> 00:05:41.917
+And not every model is
+offered in every Region.
+
+00:05:42.283 --> 00:05:45.343
+Getting access is easier
+than it used to be.
+
+00:05:45.383 --> 00:05:46.875
+Since October 2025,
+
+00:05:46.915 --> 00:05:52.343
+serverless models are switched on
+by default in commercial Regions.
+
+00:05:52.383 --> 00:05:56.843
+Anthropic's models ask for a short,
+one-time use case form first.
+
+00:05:56.883 --> 00:06:02.471
+And your admins still decide who
+can call what, with IAM policies.
+
+00:06:02.817 --> 00:06:05.743
+IAM can be as fine-grained as you like.
+
+00:06:05.783 --> 00:06:09.543
+One team might be allowed to
+call Amazon's Nova models.
+
+00:06:09.583 --> 00:06:13.912
+Another team might only be
+allowed Anthropic's Claude.
+
+00:06:14.250 --> 00:06:16.143
+And what happens to your data?
+
+00:06:16.183 --> 00:06:20.243
+It isn't shared with model makers,
+or used to train their models.
+
+00:06:20.283 --> 00:06:23.410
+It's encrypted on the way
+in and out, and at rest.
+
+00:06:23.450 --> 00:06:26.610
+Your requests stay put,
+in the Region you choose.
+
+00:06:26.650 --> 00:06:31.206
+And with PrivateLink, traffic
+can skip the public internet.
+
+00:06:31.550 --> 00:06:33.677
+Here's your first-day checklist.
+
+00:06:33.717 --> 00:06:36.043
+You need an AWS account.
+
+00:06:36.083 --> 00:06:40.177
+Sign in with a user or role
+that has Bedrock permissions.
+
+00:06:40.217 --> 00:06:41.710
+Choose your Region.
+
+00:06:41.750 --> 00:06:44.839
+Then open Bedrock, and you're in.
+
+00:06:45.183 --> 00:06:47.477
+Every account also has quotas.
+
+00:06:47.517 --> 00:06:51.677
+They limit how many requests and
+tokens you can send each minute.
+
+00:06:51.717 --> 00:06:55.843
+If your app outgrows them, you can
+ask for more in Service Quotas.
+
+00:06:55.883 --> 00:06:58.958
+So check them before a big launch.
+
+00:06:59.317 --> 00:07:05.010
+Priya starts on demand. She has no traffic
+yet, so she pays only for what she uses.
+
+00:07:05.050 --> 00:07:10.467
+If her app gets busy all day, she can
+move to provisioned throughput later.
+
+00:07:10.817 --> 00:07:15.977
+Here's a check. Priya has steady, heavy
+traffic all day. Which way to pay fits?
+
+00:07:16.017 --> 00:07:20.772
+Provisioned throughput. It
+reserves capacity by the hour.
+
+00:07:21.150 --> 00:07:25.310
+So: pay on demand, in batch,
+or with provisioned capacity.
+
+00:07:25.350 --> 00:07:32.089
+Get in through the console, the SDKs,
+or other services, with IAM in control.
+
+00:07:32.417 --> 00:07:36.489
+Chapter three. Finding your
+way around the console.
+
+00:07:36.850 --> 00:07:40.243
+The console has a few
+areas, each with one job.
+
+00:07:40.283 --> 00:07:42.377
+Find a model, and try it.
+
+00:07:42.417 --> 00:07:44.510
+Build with it, and protect it.
+
+00:07:44.550 --> 00:07:46.918
+And run it at scale.
+
+00:07:47.250 --> 00:07:52.943
+Open Bedrock in the AWS console, and
+first check the Region at the top right.
+
+00:07:52.983 --> 00:07:57.210
+You can also type Bedrock into the
+search bar to jump straight there.
+
+00:07:57.250 --> 00:08:01.577
+Menu names change over time,
+so learn each area by its job.
+
+00:08:01.617 --> 00:08:06.077
+The overview page shows the foundation
+models, and a featured model.
+
+00:08:06.117 --> 00:08:10.488
+And the model catalog sits
+at the top of the left menu.
+
+00:08:10.850 --> 00:08:14.310
+The test area is where you
+try models, with no code.
+
+00:08:14.350 --> 00:08:16.943
+One playground is for chat and text.
+
+00:08:16.983 --> 00:08:19.377
+Another is for images and video.
+
+00:08:19.417 --> 00:08:24.428
+And chat has a compare mode, to
+test two models side by side.
+
+00:08:24.783 --> 00:08:26.943
+Here's the test area in the menu.
+
+00:08:26.983 --> 00:08:30.610
+Below it, the build area holds
+the pieces of bigger apps.
+
+00:08:30.650 --> 00:08:34.243
+Agents take actions, and
+flows chain steps together.
+
+00:08:34.283 --> 00:08:40.169
+Knowledge bases connect your documents,
+and prompt management saves your prompts.
+
+00:08:40.517 --> 00:08:42.743
+Here's what each build tool is for.
+
+00:08:42.783 --> 00:08:46.343
+Agents carry out tasks,
+like calling your APIs.
+
+00:08:46.383 --> 00:08:50.710
+Flows connect prompts, models, and
+other steps into one workflow.
+
+00:08:50.750 --> 00:08:55.591
+Knowledge bases let a model
+answer from your own documents.
+
+00:08:55.917 --> 00:08:59.977
+Next comes safeguards: guardrails,
+and watermark detection.
+
+00:09:00.017 --> 00:09:04.577
+Then inference and assessment, for
+running at scale and testing quality.
+
+00:09:04.617 --> 00:09:09.277
+That's provisioned throughput, batch,
+cross-Region inference, and evaluations.
+
+00:09:09.317 --> 00:09:14.174
+And at the bottom, settings, where
+you switch on things like logging.
+
+00:09:14.550 --> 00:09:17.110
+Evaluations deserve a closer look.
+
+00:09:17.150 --> 00:09:19.410
+They test models on your own task.
+
+00:09:19.450 --> 00:09:22.943
+They score the answers, so you
+can compare models fairly.
+
+00:09:22.983 --> 00:09:26.605
+Then you choose with
+evidence, not guesswork.
+
+00:09:26.950 --> 00:09:29.043
+Let's practise finding things.
+
+00:09:29.083 --> 00:09:32.110
+Want to try a prompt? Go to the test area.
+
+00:09:32.150 --> 00:09:36.843
+Want answers from your own documents?
+That's a knowledge base, under build.
+
+00:09:36.883 --> 00:09:40.110
+Need to block harmful answers? Safeguards.
+
+00:09:40.150 --> 00:09:44.479
+Ten thousand prompts to run
+overnight? Batch inference.
+
+00:09:44.817 --> 00:09:47.777
+One more check. Where would
+you switch on logging?
+
+00:09:47.817 --> 00:09:51.249
+In settings, at the bottom of the menu.
+
+00:09:51.617 --> 00:09:56.810
+So the console has five jobs: find,
+try, build, protect, and scale.
+
+00:09:56.850 --> 00:10:01.361
+Learn them by job, and new
+menu names won't confuse you.
+
+00:10:01.717 --> 00:10:04.940
+Chapter four. Reading the menu.
+
+00:10:05.283 --> 00:10:09.410
+Open the model catalog, and you'll
+find chefs from many companies.
+
+00:10:09.450 --> 00:10:14.610
+Amazon's own Nova models, Anthropic's
+Claude, Meta's Llama, and Mistral.
+
+00:10:14.650 --> 00:10:20.769
+DeepSeek, Stability AI, Cohere, and
+more, over a hundred models in all.
+
+00:10:21.117 --> 00:10:23.443
+Each family has its own focus.
+
+00:10:23.483 --> 00:10:27.543
+Amazon's Nova models cover
+text, images, and video.
+
+00:10:27.583 --> 00:10:32.343
+Anthropic's Claude reads text and
+images, with a very long context.
+
+00:10:32.383 --> 00:10:34.977
+Meta's Llama models are open-weight.
+
+00:10:35.017 --> 00:10:38.978
+And Stability AI focuses on images.
+
+00:10:39.350 --> 00:10:43.243
+Like a real menu, the catalog
+lets you narrow things down.
+
+00:10:43.283 --> 00:10:48.709
+Filter by provider, by what the model
+makes, or by the task you need.
+
+00:10:49.083 --> 00:10:51.877
+Let's walk through the
+catalog page with Priya.
+
+00:10:51.917 --> 00:10:55.143
+At the top, a search box
+finds a model by name.
+
+00:10:55.183 --> 00:10:57.777
+On the left, she filters by provider.
+
+00:10:57.817 --> 00:11:01.010
+Then by modality, what
+goes in and comes out.
+
+00:11:01.050 --> 00:11:04.677
+And by task, like chat,
+summarizing, or search.
+
+00:11:04.717 --> 00:11:11.093
+Each card shows the provider, the model,
+and its status, like active or legacy.
+
+00:11:11.450 --> 00:11:14.143
+Models also differ by what they make.
+
+00:11:14.183 --> 00:11:18.310
+Text models, the large language
+models, read and write words.
+
+00:11:18.350 --> 00:11:22.577
+Image models paint pictures, and
+video models film short clips.
+
+00:11:22.617 --> 00:11:26.377
+Multimodal models can look at
+a picture and describe it.
+
+00:11:26.417 --> 00:11:30.895
+And embedding models turn
+text into numbers for search.
+
+00:11:31.250 --> 00:11:35.477
+In the catalog, modality means
+what goes in, and what comes out.
+
+00:11:35.517 --> 00:11:37.777
+Text in and text out, for chat.
+
+00:11:37.817 --> 00:11:40.477
+Text in and an image out, for pictures.
+
+00:11:40.517 --> 00:11:44.895
+And an image in with text
+out, to describe a photo.
+
+00:11:45.250 --> 00:11:47.710
+Embeddings turn meaning into numbers.
+
+00:11:47.750 --> 00:11:52.271
+So search can find ideas,
+not just matching words.
+
+00:11:52.617 --> 00:11:55.410
+Here's an embedding model
+at work in a search.
+
+00:11:55.450 --> 00:11:58.577
+Your question is turned
+into a list of numbers.
+
+00:11:58.617 --> 00:12:02.577
+Those numbers are compared with
+the numbers of every document.
+
+00:12:02.617 --> 00:12:07.828
+And the closest documents come back,
+even when they use different words.
+
+00:12:08.183 --> 00:12:12.043
+Every model has an ID, like
+a dish number on the menu.
+
+00:12:12.083 --> 00:12:15.208
+Some models are reached
+through inference profiles,
+
+00:12:15.248 --> 00:12:17.510
+which route requests across Regions.
+
+00:12:17.550 --> 00:12:23.410
+A geographic profile keeps your data
+inside one area, like the US or the EU.
+
+00:12:23.450 --> 00:12:28.627
+And not every model is in every
+Region, so check before you build.
+
+00:12:28.983 --> 00:12:33.210
+You'll see those profiles as a
+short prefix on the model ID.
+
+00:12:33.250 --> 00:12:36.477
+With no prefix, the request
+stays in your Region.
+
+00:12:36.517 --> 00:12:39.577
+U S dot, routes within the United States.
+
+00:12:39.617 --> 00:12:44.005
+And global dot, can route
+anywhere there's capacity.
+
+00:12:44.350 --> 00:12:47.377
+Click any model, and its model card opens.
+
+00:12:47.417 --> 00:12:52.277
+Take Amazon Nova 2 Lite. It
+reads text, images, and video.
+
+00:12:52.317 --> 00:12:56.910
+It writes text, and its context
+window holds about a million tokens.
+
+00:12:56.950 --> 00:13:01.276
+And the card gives you the
+model ID to use in code.
+
+00:13:01.650 --> 00:13:03.510
+What's a context window?
+
+00:13:03.550 --> 00:13:08.796
+It's how much text the model can work
+with at once, counted in tokens.
+
+00:13:09.117 --> 00:13:11.277
+How big is a million tokens?
+
+00:13:11.317 --> 00:13:15.243
+For Claude, it's roughly seven
+hundred and fifty thousand words.
+
+00:13:15.283 --> 00:13:20.141
+That's more than two and a half
+thousand pages, in a single prompt.
+
+00:13:20.483 --> 00:13:22.877
+Models also have a life cycle.
+
+00:13:22.917 --> 00:13:26.443
+An active model gets updates,
+and you can build on it.
+
+00:13:26.483 --> 00:13:31.377
+When it turns legacy, you usually get
+six months' notice before it goes away.
+
+00:13:31.417 --> 00:13:36.243
+After end of life, calls to it fail,
+so plan your move to a newer version.
+
+00:13:36.283 --> 00:13:41.233
+The model card tells you the
+earliest date a model can retire.
+
+00:13:41.583 --> 00:13:44.277
+Priya opens the Nova 2 Lite card.
+
+00:13:44.317 --> 00:13:48.143
+She checks what it reads and
+writes, and its context window.
+
+00:13:48.183 --> 00:13:52.243
+She copies the model ID, because
+her code will need it later.
+
+00:13:52.283 --> 00:13:57.166
+And one click opens the model in
+the playground, ready to try.
+
+00:13:57.517 --> 00:14:00.010
+Some models are reasoning models.
+
+00:14:00.050 --> 00:14:03.753
+Before answering, they think
+through the problem step by step,
+
+00:14:03.793 --> 00:14:05.443
+and can show that thinking.
+
+00:14:05.483 --> 00:14:12.009
+DeepSeek R1 is one example. It's
+slower, but strong on tricky problems.
+
+00:14:12.350 --> 00:14:17.043
+Beyond the main menu, there's a specialty
+aisle called Bedrock Marketplace.
+
+00:14:17.083 --> 00:14:20.277
+It adds over a hundred
+more specialized models.
+
+00:14:20.317 --> 00:14:25.947
+Those run on endpoints you deploy, while
+serverless models are ready to call.
+
+00:14:26.283 --> 00:14:27.877
+So how do you choose?
+
+00:14:27.917 --> 00:14:31.510
+Start from the job: text,
+pictures, or search.
+
+00:14:31.550 --> 00:14:34.577
+Smaller models are often
+faster and cheaper.
+
+00:14:34.617 --> 00:14:38.689
+Then try a few in the
+playground before you commit.
+
+00:14:39.050 --> 00:14:41.377
+Priya makes a shortlist for her app.
+
+00:14:41.417 --> 00:14:44.710
+For dinner ideas, a
+small, fast text model.
+
+00:14:44.750 --> 00:14:47.610
+For dish photos later on, an image model.
+
+00:14:47.650 --> 00:14:51.715
+And to search her recipes,
+an embedding model.
+
+00:14:52.050 --> 00:14:55.543
+Before we wrap up, four
+first-day mistakes to avoid.
+
+00:14:55.583 --> 00:14:59.110
+The model isn't showing? You
+may be in the wrong Region.
+
+00:14:59.150 --> 00:15:03.143
+A Claude call fails? Fill in
+the one-time Anthropic form.
+
+00:15:03.183 --> 00:15:06.810
+Access denied? Your role
+needs Bedrock permissions.
+
+00:15:06.850 --> 00:15:12.034
+And a model retiring? Check its
+model card, and plan your move.
+
+00:15:12.383 --> 00:15:16.543
+Here's a question. Which kind of
+model would power document search?
+
+00:15:16.583 --> 00:15:21.505
+An embedding model. It compares
+meaning, not exact words.
+
+00:15:21.850 --> 00:15:25.477
+Now it's your turn. Before
+the next episode, try this.
+
+00:15:25.517 --> 00:15:28.677
+Open the Bedrock console,
+and check your Region.
+
+00:15:28.717 --> 00:15:32.377
+Find the model catalog,
+and filter by text models.
+
+00:15:32.417 --> 00:15:35.910
+Open one model card,
+and note its model ID.
+
+00:15:35.950 --> 00:15:39.954
+And find where the playground
+and the guardrails live.
+
+00:15:40.317 --> 00:15:42.377
+Here are the new words from today.
+
+00:15:42.417 --> 00:15:45.843
+A token is a small piece
+of text that you pay for.
+
+00:15:45.883 --> 00:15:49.443
+A model ID names the
+exact model and version.
+
+00:15:49.483 --> 00:15:53.177
+An inference profile routes
+your request across Regions.
+
+00:15:53.217 --> 00:15:57.566
+And provisioned throughput
+reserves capacity by the hour.
+
+00:15:57.917 --> 00:16:03.743
+That's episode one. Bedrock is one door to
+many models, paid per use, and private.
+
+00:16:03.783 --> 00:16:06.277
+You know how to pay, and how to get in.
+
+00:16:06.317 --> 00:16:09.043
+You've toured the console, area by area.
+
+00:16:09.083 --> 00:16:10.877
+And you can read the menu.
+
+00:16:10.917 --> 00:16:15.277
+Next time, Priya talks to her
+first model in the playground.
+

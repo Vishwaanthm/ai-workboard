@@ -49,7 +49,14 @@ describe('routing', () => {
     seedLearner()
     renderApp(`/learn/${id}`)
     expect(await heading(title)).toBeInTheDocument()
-    expect(screen.getByText('Video coming soon')).toBeInTheDocument()
+    const episode = courseData.episodes.find((e) => e.id === id)!
+    if (Object.keys(episode.videos).length > 0) {
+      // A finished episode shows the player, not the placeholder.
+      expect(screen.getByLabelText(`Episode ${episode.number}: ${episode.title}`)).toBeInTheDocument()
+      expect(screen.queryByText('Video coming soon')).not.toBeInTheDocument()
+    } else {
+      expect(screen.getByText('Video coming soon')).toBeInTheDocument()
+    }
   })
 
   it.each(courseData.labs.map((l) => [l.id, l.title] as const))('renders lab %s', async (id, title) => {
@@ -188,19 +195,31 @@ describe('lessons', () => {
     expect(answer).not.toBeVisible()
   })
 
-  it('lists chapters without seek times while the catalog gives none', async () => {
+  it('lists chapters without seek times for an episode that has no video yet', async () => {
     seedLearner()
-    renderApp('/learn/1')
-    await heading(title(1))
+    renderApp('/learn/2')
+    await heading(title(2))
     const guide = screen.getByRole('region', { name: 'In this episode' })
-    for (const label of ['What Bedrock is', 'Paying and getting in', 'The console map', 'The model menu']) {
+    for (const label of ['Chapter 1', 'Chapter 2', 'Chapter 3', 'Chapter 4']) {
       expect(within(guide).getByText(label)).toBeInTheDocument()
     }
     expect(within(guide).getByText('4 chapters')).toBeInTheDocument()
     // Static list: no seek buttons and no m:ss times.
-    expect(within(guide).queryByRole('button', { name: /What Bedrock is/ })).not.toBeInTheDocument()
+    expect(within(guide).queryByRole('button', { name: /Chapter 1/ })).not.toBeInTheDocument()
     expect(within(guide).queryByText(/^\d+:\d{2}$/)).not.toBeInTheDocument()
-    for (const outcome of courseData.episodes[0]!.outcomes) expect(within(guide).getByText(outcome)).toBeInTheDocument()
+    for (const outcome of courseData.episodes[1]!.outcomes) expect(within(guide).getByText(outcome)).toBeInTheDocument()
+  })
+
+  it('lists the finished episode\'s chapters under the player with their start times', async () => {
+    seedLearner()
+    renderApp('/learn/1')
+    await heading(title(1))
+    const chapters = screen.getByRole('region', { name: 'Chapters' })
+    const labels = ['What Bedrock is', 'Paying and getting in', 'The console map', 'The model menu']
+    const times = ['0:00', '3:48', '7:32', '10:01']
+    labels.forEach((label, i) => {
+      expect(within(chapters).getByRole('button', { name: new RegExp(`${times[i]}\\s*${label}`) })).toBeInTheDocument()
+    })
   })
 
   it('shows the catalog length as approximate until the real video length is known', async () => {

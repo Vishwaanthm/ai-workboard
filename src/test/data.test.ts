@@ -9,9 +9,25 @@ const dataFiles = import.meta.glob('/src/data/{course,labs,quizzes,site,home}.ts
   eager: true,
 }) as Record<string, string>
 
+// File names under public/videos (the values are lazy loaders we never call; only the keys matter).
+const publicFiles = Object.keys(import.meta.glob('/public/videos/**/*'))
+
 describe('course data', () => {
   it('ships valid placeholder data', () => {
     expect(validateCourseData(courseData)).toEqual([])
+  })
+
+  it('points only at video, caption and poster files that exist in public/', () => {
+    const paths = courseData.episodes.flatMap((e) => [
+      ...Object.values(e.videos),
+      ...Object.values(e.captions),
+      ...(e.poster ? [e.poster] : []),
+    ])
+    expect(paths.length).toBeGreaterThan(0)
+    for (const p of paths) {
+      if (!p.startsWith('/')) continue // full https:// URLs live on another host
+      expect(publicFiles, `missing public${p}`).toContain(`/public${p}`)
+    }
   })
 
   it('marks every data file as placeholder content', () => {
@@ -42,14 +58,21 @@ describe('course data', () => {
       expect(e.check?.answer).toBeTruthy()
       expect(e.services?.length).toBeGreaterThan(0)
     }
-    // E01's chapter names are real; no chapter has a start time yet.
-    expect(courseData.episodes[0]!.chapters!.map((c) => c.label)).toEqual([
+    // E01 is finished: real chapter names with start times from the video's timeline.
+    const [e01, ...others] = courseData.episodes
+    expect(e01!.chapters!.map((c) => c.label)).toEqual([
       'What Bedrock is',
       'Paying and getting in',
       'The console map',
       'The model menu',
     ])
-    expect(courseData.episodes.flatMap((e) => e.chapters ?? []).every((c) => c.t === undefined)).toBe(true)
+    expect(e01!.chapters!.map((c) => c.t)).toEqual([0, 228, 452, 601])
+    expect(e01!.videos).toEqual({ en: '/videos/e01/en.mp4' })
+    expect(e01!.captions).toEqual({ en: '/videos/e01/en.vtt' })
+    expect(e01!.poster).toBe('/videos/e01/poster.jpg')
+    // The other episodes have no video and no chapter times yet.
+    expect(others.every((e) => Object.keys(e.videos).length === 0)).toBe(true)
+    expect(others.flatMap((e) => e.chapters ?? []).every((c) => c.t === undefined)).toBe(true)
     expect(courseData.episodes.filter((m) => m.labId)).toHaveLength(2)
     expect(courseData.labs.some((l) => l.untested && l.steps.some((s) => s.code))).toBe(true)
     expect(courseData.labs.some((l) => l.steps.every((s) => !s.code))).toBe(true)
@@ -58,9 +81,9 @@ describe('course data', () => {
     for (const q of courseData.quizzes) expect(q.questions).toHaveLength(3)
     // One placeholder quiz per episode, plus the final.
     expect(courseData.quizzes.filter((q) => q.episodeId !== 'final').map((q) => q.episodeId)).toEqual([1, 2, 3, 4, 5])
-    // Episodes carry the video fields; no files yet ("Video coming soon").
+    // Every episode has a length; only E01 has video files so far (the rest show "Video coming soon").
     for (const e of courseData.episodes) {
-      expect(Object.keys(e.videos)).toHaveLength(0)
+      expect(Object.keys(e.videos)).toHaveLength(e.id === 1 ? 1 : 0)
       expect(e.durationSec).toBeGreaterThan(0)
     }
     // E01 has its measured length (16:16); the rest show the catalog target as approximate.

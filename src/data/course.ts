@@ -59,13 +59,15 @@ export const episodes: Episode[] = [
     services: ['bedrock'],
     // Measured length of the finished video (16:16).
     durationSec: 976,
-    videos: {},
-    captions: {},
+    videos: { en: '/videos/e01/en.mp4' },
+    captions: { en: '/videos/e01/en.vtt' },
+    poster: '/videos/e01/poster.jpg',
+    // Start seconds from the video's timeline (the "Chapter N" title cards are at 0:33, 3:48, 7:32, 10:01).
     chapters: [
-      { label: 'What Bedrock is' },
-      { label: 'Paying and getting in' },
-      { label: 'The console map' },
-      { label: 'The model menu' },
+      { t: 0, label: 'What Bedrock is' },
+      { t: 228, label: 'Paying and getting in' },
+      { t: 452, label: 'The console map' },
+      { t: 601, label: 'The model menu' },
     ],
     labId: 'lab-1',
   },
