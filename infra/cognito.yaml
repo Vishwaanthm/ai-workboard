@@ -14,6 +14,11 @@ Parameters:
     Type: String
     Description: The live site, with a trailing slash, for example https://vishwaanthm.github.io/ai-workboard/
     AllowedPattern: '^https://.+/$'
+  ExtraSiteUrl:
+    Type: String
+    Default: ''
+    Description: Optional second live address, with a trailing slash (for example while moving from one host to another).
+    AllowedPattern: '^(https://.+/)?$'
   DevUrl:
     Type: String
     Default: http://localhost:5173/
@@ -45,6 +50,7 @@ Parameters:
       https://login.microsoftonline.com/<your tenant ID>/v2.0
 
 Conditions:
+  HasExtraSiteUrl: !Not [!Equals [!Ref ExtraSiteUrl, '']]
   HasGoogle: !And [!Not [!Equals [!Ref GoogleClientId, '']], !Not [!Equals [!Ref GoogleClientSecret, '']]]
   HasMicrosoft: !And [!Not [!Equals [!Ref MicrosoftClientId, '']], !Not [!Equals [!Ref MicrosoftClientSecret, '']]]
 
@@ -130,9 +136,11 @@ Resources:
       CallbackURLs:
         - !Sub '${SiteUrl}auth/callback'
         - !Sub '${DevUrl}auth/callback'
+        - !If [HasExtraSiteUrl, !Sub '${ExtraSiteUrl}auth/callback', !Ref 'AWS::NoValue']
       LogoutURLs:
         - !Ref SiteUrl
         - !Ref DevUrl
+        - !If [HasExtraSiteUrl, !Ref ExtraSiteUrl, !Ref 'AWS::NoValue']
       # Reading each provider's name from its own resource makes the client wait for it, but only when it exists
       # (a DependsOn on a switched-off resource is rejected). Ref gives "<pool id>:<provider name>".
       SupportedIdentityProviders:

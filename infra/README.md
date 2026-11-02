@@ -73,6 +73,25 @@ the site with real sign-in. To try it locally, copy `.env.example` to
 `.env.local`, fill in the same two values, and run `npm run dev` (the dev address `http://localhost:5173/`
 is already allowed).
 
+## Site hosting on AWS (S3 and CloudFront)
+
+The site itself is also hosted on AWS, in account `679289940597` (an AWS Organization account):
+
+- **Address:** https://d2bc5nqm701msc.cloudfront.net/ (CloudFront distribution `E1T9FKL7QEKJ35`, price class 200,
+  HTTP/2 and HTTP/3, redirect to HTTPS, compression, `403`/`404` answered with `index.html` and status 200 so direct
+  links such as `/learn/1` work).
+- **Files:** the private S3 bucket `ai-workboard-679289940597-apse2` (Sydney). Only this distribution may read it
+  (origin access control); the bucket is not public.
+- **Build for it:** `BASE_PATH` is not set (the site sits at the root), with the Cognito values baked in:
+  `VITE_COGNITO_DOMAIN=<CognitoDomain> VITE_COGNITO_CLIENT_ID=<ClientId> npx vite build --outDir <folder> --emptyOutDir`.
+  Leave out `.vite/manifest.json`. The E01 video there is the 1080p version (128 MB); GitHub Pages keeps the 720p one
+  because GitHub rejects files over 100 MB.
+- **Upload only what changed.** Compare each file's MD5 with the bucket's ETag. Cache headers:
+  `assets/*` `public,max-age=31536000,immutable`; `index.html` `no-cache`; videos `public,max-age=86400`. Upload
+  `index.html` last, then invalidate `/*`, then remove old hashed files from `assets/`.
+- **Sign-in:** the Cognito stack lists this address (`SiteUrl`) and GitHub Pages (`ExtraSiteUrl`) as return addresses.
+  Moving the site means updating those parameters first, or sign-in fails with a redirect mismatch.
+
 ## Good to know
 
 - **The login decides what the page shows; it does not lock files.** The site is static, so the video and
