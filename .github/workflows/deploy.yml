@@ -30,6 +30,8 @@ jobs:
           # Public sign-in settings (see infra/README.md). Empty keeps the browser-only demo login.
           VITE_COGNITO_DOMAIN: ${{ vars.COGNITO_DOMAIN }}
           VITE_COGNITO_CLIENT_ID: ${{ vars.COGNITO_CLIENT_ID }}
+          # Social buttons to show, for example "google,microsoft". Add one only after it is connected in Cognito.
+          VITE_COGNITO_PROVIDERS: ${{ vars.COGNITO_PROVIDERS }}
       # SPA fallback so deep links like /course work, and skip Jekyll processing.
       - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
       - uses: actions/configure-pages@v6

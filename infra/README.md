@@ -62,7 +62,14 @@ gh variable set COGNITO_DOMAIN --body "<CognitoDomain output>"
 gh variable set COGNITO_CLIENT_ID --body "<ClientId output>"
 ```
 
-The next push to `main` rebuilds the site with real sign-in. To try it locally, copy `.env.example` to
+When Google or Microsoft is connected (steps 2 to 4), also show its button, then push or re-run the deploy:
+
+```bash
+gh variable set COGNITO_PROVIDERS --body "google,microsoft"   # or just one of them
+```
+
+Until then only the email button is shown, so no button leads to an error. The next push to `main` rebuilds
+the site with real sign-in. To try it locally, copy `.env.example` to
 `.env.local`, fill in the same two values, and run `npm run dev` (the dev address `http://localhost:5173/`
 is already allowed).
 

@@ -52,7 +52,10 @@ describe('PKCE and the sign-in redirect', () => {
   })
 
   it('is off until both Cognito settings are given', () => {
-    expect(getCognito()).toEqual({ domain: DOMAIN, clientId: CLIENT })
+    expect(getCognito()).toEqual({ domain: DOMAIN, clientId: CLIENT, providers: [] })
+    vi.stubEnv('VITE_COGNITO_PROVIDERS', ' google , Microsoft,facebook')
+    expect(getCognito()?.providers).toEqual(['Google', 'Microsoft']) // only the two we support, any case
+    vi.stubEnv('VITE_COGNITO_PROVIDERS', '')
     vi.stubEnv('VITE_COGNITO_CLIENT_ID', '')
     expect(getCognito()).toBeNull()
     vi.stubEnv('VITE_COGNITO_CLIENT_ID', CLIENT)
@@ -196,7 +199,16 @@ describe('OAuth accounts in this browser', () => {
 })
 
 describe('the login pages with Cognito set up', () => {
+  it('offers only email until a social provider is switched on', async () => {
+    renderApp('/login')
+    expect(await screen.findByRole('button', { name: /continue with email/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /continue with google/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /continue with microsoft/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('or')).not.toBeInTheDocument()
+  })
+
   it('offers Google, Microsoft and email, and no password field', async () => {
+    vi.stubEnv('VITE_COGNITO_PROVIDERS', 'google,microsoft')
     renderApp('/login')
     expect(await screen.findByRole('heading', { level: 1, name: 'Log in' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
@@ -212,6 +224,7 @@ describe('the login pages with Cognito set up', () => {
   })
 
   it('opens Cognito when a provider is chosen', async () => {
+    vi.stubEnv('VITE_COGNITO_PROVIDERS', 'google,microsoft')
     renderApp('/login')
     await userEvent.click(await screen.findByRole('button', { name: /continue with microsoft/i }))
     await waitFor(() => expect(assign).toHaveBeenCalledTimes(1))

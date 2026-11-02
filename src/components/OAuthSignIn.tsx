@@ -6,6 +6,7 @@ import { PageHeading } from '@/components/PageHeading'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { startSignIn, type SignInMethod } from '@/lib/oauth'
+import { getCognito } from '@/lib/oauthConfig'
 
 /** The official four-colour marks, drawn small as the providers' branding guidelines ask. */
 const GoogleMark = () => (
@@ -36,6 +37,7 @@ export function OAuthSignIn({ intent }: { intent: 'login' | 'register' }) {
   const [pending, setPending] = useState<SignInMethod | null>(null)
   const [error, setError] = useState<string>()
   const register = intent === 'register'
+  const providers = getCognito()?.providers ?? []
 
   const go = async (method: SignInMethod) => {
     if (pending) return
@@ -80,13 +82,15 @@ export function OAuthSignIn({ intent }: { intent: 'login' | 'register' }) {
             <p role="alert">{error}</p>
           </Callout>
         ) : null}
-        {choice('Google', 'Continue with Google', <GoogleMark />)}
-        {choice('Microsoft', 'Continue with Microsoft', <MicrosoftMark />)}
-        <div className="my-1 flex items-center gap-3 text-sm text-muted-foreground" aria-hidden="true">
-          <span className="h-px flex-1 bg-border" />
-          or
-          <span className="h-px flex-1 bg-border" />
-        </div>
+        {providers.includes('Google') ? choice('Google', 'Continue with Google', <GoogleMark />) : null}
+        {providers.includes('Microsoft') ? choice('Microsoft', 'Continue with Microsoft', <MicrosoftMark />) : null}
+        {providers.length > 0 ? (
+          <div className="my-1 flex items-center gap-3 text-sm text-muted-foreground" aria-hidden="true">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        ) : null}
         <Button
           size="lg"
           className="w-full"
