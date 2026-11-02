@@ -10,8 +10,10 @@ import { certificateId } from './hash'
 export interface Account {
   name: string
   email: string
-  salt: string
-  passwordHash: string
+  /** Demo accounts only. Accounts that signed in with OAuth (Cognito) never have a password here. */
+  salt?: string
+  passwordHash?: string
+  provider?: 'cognito'
   createdAt: string
 }
 
@@ -19,6 +21,8 @@ export type Accounts = Record<string, Account>
 
 export interface Session {
   email: string
+  /** Unix seconds. OAuth sessions end when the ID token expires; demo sessions have none. */
+  exp?: number
 }
 
 export interface QuizRecord {
@@ -73,10 +77,12 @@ export function validName(v: unknown): v is string {
 
 export function validateAccount(v: unknown): Account | null {
   if (!isObject(v)) return null
-  const { name, email, salt, passwordHash, createdAt } = v
+  const { name, email, salt, passwordHash, provider, createdAt } = v
   if (!validName(name)) return null
   if (typeof email !== 'string' || email !== email.trim().toLowerCase() || !email.includes('@')) return null
-  if (!isHex(salt) || !isHex(passwordHash) || !isIsoDate(createdAt)) return null
+  if (!isIsoDate(createdAt)) return null
+  if (provider === 'cognito') return { name: name.trim(), email, provider, createdAt }
+  if (!isHex(salt) || !isHex(passwordHash)) return null
   return { name: name.trim(), email, salt, passwordHash, createdAt }
 }
 
@@ -92,7 +98,8 @@ export function validateAccounts(v: unknown): Accounts | null {
 
 export function validateSession(v: unknown, accounts: Accounts): Session | null {
   if (!isObject(v) || typeof v.email !== 'string') return null
-  return Object.hasOwn(accounts, v.email) ? { email: v.email } : null
+  if (!Object.hasOwn(accounts, v.email)) return null
+  return typeof v.exp === 'number' && Number.isFinite(v.exp) ? { email: v.email, exp: v.exp } : { email: v.email }
 }
 
 export function passMarkOf(passMark: number | undefined): number {

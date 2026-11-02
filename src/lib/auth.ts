@@ -42,6 +42,7 @@ export function readAccounts(): Accounts {
 export function readSessionAccount(): Account | null {
   const accounts = readAccounts()
   const session = readJSON(storageKeys.session, null, (v) => validateSession(v, accounts))
+  if (session?.exp !== undefined && session.exp * 1000 <= Date.now()) return null // the OAuth session ended
   return session ? (accounts[session.email] ?? null) : null
 }
 
@@ -95,11 +96,36 @@ export async function login(emailInput: string, password: string): Promise<AuthR
   const email = normaliseEmail(emailInput)
   const accounts = readAccounts()
   const account = Object.hasOwn(accounts, email) ? accounts[email] : undefined
-  if (!account) return { ok: false, reason: 'credentials' }
+  // OAuth accounts have no password here, so they can never be opened with one.
+  if (!account?.salt || !account.passwordHash) return { ok: false, reason: 'credentials' }
   if ((await hashPassword(account.salt, password)) !== account.passwordHash) {
     return { ok: false, reason: 'credentials' }
   }
   if (!writeJSON(storageKeys.session, { email })) return { ok: false, reason: 'storage' }
+  return { ok: true, account }
+}
+
+export interface OAuthProfile {
+  email: string
+  name?: string
+  /** Unix seconds when the ID token expires; the session ends then. */
+  exp: number
+}
+
+/** Signs in a learner whom Cognito has already authenticated. No password is stored for them. */
+export function signInWithProfile(profile: OAuthProfile): AuthResult {
+  const email = normaliseEmail(profile.email)
+  if (!EMAIL_PATTERN.test(email)) return { ok: false, reason: 'credentials' }
+  const accounts = readAccounts()
+  const name = (profile.name?.trim() || email.split('@')[0] || email).slice(0, NAME_MAX).trim()
+  const account: Account = {
+    name,
+    email,
+    provider: 'cognito',
+    createdAt: accounts[email]?.createdAt ?? new Date().toISOString(),
+  }
+  if (!writeJSON(storageKeys.accounts, { ...accounts, [email]: account })) return { ok: false, reason: 'storage' }
+  if (!writeJSON(storageKeys.session, { email, exp: profile.exp })) return { ok: false, reason: 'storage' }
   return { ok: true, account }
 }
 

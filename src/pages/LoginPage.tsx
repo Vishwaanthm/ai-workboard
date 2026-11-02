@@ -2,14 +2,21 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { describedBy, ErrorSummary, Field, PasswordInput, type FieldError } from '@/components/AuthForm'
 import { AuthShell } from '@/components/AuthShell'
+import { OAuthSignIn } from '@/components/OAuthSignIn'
 import { PageHeading } from '@/components/PageHeading'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAppState } from '@/context/useAppState'
 import { authFailureMessage } from '@/lib/auth'
+import { getCognito } from '@/lib/oauthConfig'
 import { safeNext } from '@/lib/redirect'
 
+/** Real sign-in (Google, Microsoft, email through Cognito) when it is set up, else the browser-only demo form. */
 export default function LoginPage() {
+  return getCognito() ? <OAuthSignIn intent="login" /> : <DemoLogin />
+}
+
+function DemoLogin() {
   const { login } = useAppState()
   const navigate = useNavigate()
   const [params] = useSearchParams()

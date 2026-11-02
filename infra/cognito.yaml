@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  AI Workboard sign-in: an Amazon Cognito user pool with a hosted sign-in page, email and password,
+  Google and Microsoft, and one public web app client that uses the authorization code flow with PKCE.
+  The site is front-end only, so the client has no secret. See infra/README.md for the steps.
+
+Parameters:
+  DomainPrefix:
+    Type: String
+    Description: Unique prefix for the hosted sign-in address, for example ai-workboard-yourname.
+    AllowedPattern: '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
+    ConstraintDescription: Lowercase letters, digits and hyphens only. Do not use "aws", "amazon" or "cognito".
+  SiteUrl:
+    Type: String
+    Description: The live site, with a trailing slash, for example https://vishwaanthm.github.io/ai-workboard/
+    AllowedPattern: '^https://.+/$'
+  DevUrl:
+    Type: String
+    Default: http://localhost:5173/
+    Description: Local development address, with a trailing slash. Allowed as a second sign-in return address.
+    AllowedPattern: '^http://localhost:[0-9]+/$'
+  GoogleClientId:
+    Type: String
+    Default: ''
+    Description: Google OAuth client ID. Leave empty to skip Google sign-in for now.
+  GoogleClientSecret:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Google OAuth client secret. Leave empty to skip Google sign-in for now.
+  MicrosoftClientId:
+    Type: String
+    Default: ''
+    Description: Microsoft Entra application (client) ID. Leave empty to skip Microsoft sign-in for now.
+  MicrosoftClientSecret:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Microsoft Entra client secret value. Leave empty to skip Microsoft sign-in for now.
+  MicrosoftIssuer:
+    Type: String
+    Default: https://login.microsoftonline.com/consumers/v2.0
+    Description: >
+      Who may sign in with Microsoft. Personal accounts: the default (consumers). Your own organisation:
+      https://login.microsoftonline.com/<your tenant ID>/v2.0
+
+Conditions:
+  HasGoogle: !And [!Not [!Equals [!Ref GoogleClientId, '']], !Not [!Equals [!Ref GoogleClientSecret, '']]]
+  HasMicrosoft: !And [!Not [!Equals [!Ref MicrosoftClientId, '']], !Not [!Equals [!Ref MicrosoftClientSecret, '']]]
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${AWS::StackName}-learners'
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      MfaConfiguration: 'OFF'
+      DeletionProtection: ACTIVE
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 10
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref DomainPrefix
+      UserPoolId: !Ref UserPool
+
+  GoogleProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Condition: HasGoogle
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: Google
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: 'openid email profile'
+      AttributeMapping:
+        email: email
+        name: name
+        username: sub
+
+  MicrosoftProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Condition: HasMicrosoft
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: Microsoft
+      ProviderType: OIDC
+      ProviderDetails:
+        client_id: !Ref MicrosoftClientId
+        client_secret: !Ref MicrosoftClientSecret
+        oidc_issuer: !Ref MicrosoftIssuer
+        authorize_scopes: 'openid email profile'
+        attributes_request_method: GET
+      AttributeMapping:
+        email: email
+        name: name
+        username: sub
+
+  WebClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${AWS::StackName}-web'
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs:
+        - !Sub '${SiteUrl}auth/callback'
+        - !Sub '${DevUrl}auth/callback'
+      LogoutURLs:
+        - !Ref SiteUrl
+        - !Ref DevUrl
+      # Reading each provider's name from its own resource makes the client wait for it, but only when it exists
+      # (a DependsOn on a switched-off resource is rejected). Ref gives "<pool id>:<provider name>".
+      SupportedIdentityProviders:
+        - COGNITO
+        - !If [HasGoogle, !Select [1, !Split [':', !Ref GoogleProvider]], !Ref 'AWS::NoValue']
+        - !If [HasMicrosoft, !Select [1, !Split [':', !Ref MicrosoftProvider]], !Ref 'AWS::NoValue']
+      # The hosted pages do the signing in, so the app itself needs no password flow.
+      ExplicitAuthFlows: [ALLOW_REFRESH_TOKEN_AUTH]
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      # The site keeps only the ID token's identity and ends its session when that token expires.
+      IdTokenValidity: 24
+      AccessTokenValidity: 1
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        IdToken: hours
+        AccessToken: hours
+        RefreshToken: days
+
+Outputs:
+  CognitoDomain:
+    Description: Value for the VITE_COGNITO_DOMAIN build setting (GitHub variable COGNITO_DOMAIN).
+    Value: !Sub '${DomainPrefix}.auth.${AWS::Region}.amazoncognito.com'
+  ClientId:
+    Description: Value for the VITE_COGNITO_CLIENT_ID build setting (GitHub variable COGNITO_CLIENT_ID).
+    Value: !Ref WebClient
+  IdentityProviderReturnAddress:
+    Description: Add this as the authorised redirect URI in the Google and Microsoft app settings.
+    Value: !Sub 'https://${DomainPrefix}.auth.${AWS::Region}.amazoncognito.com/oauth2/idpresponse'

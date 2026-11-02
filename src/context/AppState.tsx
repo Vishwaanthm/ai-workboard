@@ -4,6 +4,7 @@ import { courseData } from '@/data'
 import type { CourseData, Quiz } from '@/data/types'
 import * as auth from '@/lib/auth'
 import { certificateId } from '@/lib/hash'
+import { signOutUrl } from '@/lib/oauthConfig'
 import * as rules from '@/lib/progress'
 import * as watchRules from '@/lib/watch'
 import {
@@ -31,6 +32,8 @@ export interface AppStateValue {
   authInProgress: boolean
   register: (input: auth.RegisterInput) => Promise<auth.AuthResult>
   login: (email: string, password: string) => Promise<auth.AuthResult>
+  /** Signs in a learner whom Cognito (OAuth) has already authenticated. */
+  completeOAuthSignIn: (profile: auth.OAuthProfile) => auth.AuthResult
   logout: () => void
   /** Called when the login/register page unmounts; re-enables the guest-only redirect. */
   finishAuth: () => void
@@ -157,13 +160,28 @@ export function AppStateProvider({ children, data = courseData }: { children: Re
     [reload],
   )
 
+  const completeOAuthSignIn = useCallback(
+    (profile: auth.OAuthProfile) => {
+      const result = auth.signInWithProfile(profile)
+      if (result.ok) {
+        setAuthInProgress(true)
+        reload()
+      }
+      return result
+    },
+    [reload],
+  )
+
   const finishAuth = useCallback(() => setAuthInProgress(false), [])
 
   const logout = useCallback(() => {
+    // An OAuth learner also leaves Cognito's own session, so the next sign-in asks again.
+    const cognitoSignOut = user?.provider === 'cognito' ? signOutUrl() : null
     auth.logout()
     setUser(null)
     setProgress(emptyProgress())
-  }, [])
+    if (cognitoSignOut) window.location.assign(cognitoSignOut)
+  }, [user])
 
   const issueCertificate = useCallback((): CertificateRecord | null => {
     if (!user) return null
@@ -205,6 +223,7 @@ export function AppStateProvider({ children, data = courseData }: { children: Re
       finishAuth,
       register,
       login,
+      completeOAuthSignIn,
       logout,
       setEpisodeComplete,
       setStepDone,
@@ -223,6 +242,7 @@ export function AppStateProvider({ children, data = courseData }: { children: Re
       finishAuth,
       register,
       login,
+      completeOAuthSignIn,
       logout,
       setEpisodeComplete,
       setStepDone,

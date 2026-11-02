@@ -3,6 +3,7 @@ dist
 coverage
 *.log
 .vite
+.env.local
 
 # Kept local only (not published)
 docs/

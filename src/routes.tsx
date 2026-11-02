@@ -17,6 +17,7 @@ const QuizPage = lazy(() => import('./pages/QuizPage'))
 const CertificatePage = lazy(() => import('./pages/CertificatePage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 
 function Layout({ withScrollRestoration = true }: { withScrollRestoration?: boolean }) {
@@ -80,6 +81,7 @@ export function buildRoutes({ scrollRestoration = true } = {}): RouteObject[] {
         { path: '/certificate', element: learner(<CertificatePage />) },
         { path: '/login', element: guest(<LoginPage />) },
         { path: '/register', element: guest(<RegisterPage />) },
+        { path: '/auth/callback', element: guest(<AuthCallbackPage />) },
         { path: '/dashboard', element: learner(<DashboardPage />) },
         { path: '*', element: <NotFound /> },
       ],
