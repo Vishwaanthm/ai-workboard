@@ -142,11 +142,11 @@ Resources:
         - !Ref DevUrl
         - !If [HasExtraSiteUrl, !Ref ExtraSiteUrl, !Ref 'AWS::NoValue']
       # Reading each provider's name from its own resource makes the client wait for it, but only when it exists
-      # (a DependsOn on a switched-off resource is rejected). Ref gives "<pool id>:<provider name>".
+      # (a DependsOn on a switched-off resource is rejected). Ref on a provider returns its name.
       SupportedIdentityProviders:
         - COGNITO
-        - !If [HasGoogle, !Select [1, !Split [':', !Ref GoogleProvider]], !Ref 'AWS::NoValue']
-        - !If [HasMicrosoft, !Select [1, !Split [':', !Ref MicrosoftProvider]], !Ref 'AWS::NoValue']
+        - !If [HasGoogle, !Ref GoogleProvider, !Ref 'AWS::NoValue']
+        - !If [HasMicrosoft, !Ref MicrosoftProvider, !Ref 'AWS::NoValue']
       # The hosted pages do the signing in, so the app itself needs no password flow.
       ExplicitAuthFlows: [ALLOW_REFRESH_TOKEN_AUTH]
       PreventUserExistenceErrors: ENABLED
